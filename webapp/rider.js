@@ -10,7 +10,7 @@ class Rider {
         this.destFloor = destFloor;
         this.cars = cars;
         this.height = randomGaussian(10, 2);
-        this.width  = randomGaussian(5, 2);
+        this.width = randomGaussian(5, 2);
         this.pos = createVector(0, yFromFloor(this.floor), this.randomFloorZ());
         this.waitPos = createVector(width * 0.2 + randomGaussian(width / 8, width / 10), this.pos.y, this.pos.z);
         this.state = this.STATE_ARRIVING;
@@ -85,7 +85,8 @@ class Rider {
         if (this.state === this.STATE_EXITED) return;
 
         push();
-        translate(this.pos.x, this.pos.y, this.pos.z);
+        const LEG_LENGTH = 6;
+        translate(this.pos.x, this.pos.y + LEG_LENGTH, this.pos.z);
         const fadeThreshold = 0.8;
         const arrivingFadeThreshold = 1 - fadeThreshold;
         const maxAlpha = 200;
@@ -98,25 +99,19 @@ class Rider {
         push();
         const legLength = 4;
         translate(0, this.height / 2 + legLength, 0);
-        noStroke();
-        fill(150, alpha);
+        stroke(128, alpha);
+        fill(255, 255, 0, alpha);
         ellipsoid(this.width, this.height, this.width);
         pop();
 
-        if (this.state === this.STATE_EXITING) {
-            fill(0, 150, 0, alpha);
-            stroke(0, 150, 0, alpha);
-        } else if (this.state === this.STATE_ARRIVING || this.state === this.STATE_WAITING) {
-            fill(255, 0, 0, alpha);
-            stroke(255, 0, 0, alpha);
-        } else {
+        if (this.state !== this.STATE_EXITING) { // Skip number when on target floor and leaving
             fill(0, alpha);
             stroke(0, alpha);
+            translate(0, this.height * 3, 0);
+            textSize(14);
+            scale(1, -1, 1);  // Otherwise text is upside-down
+            text(this.destFloor, 0, 0);
         }
-        translate(0, this.height * 3, 0);
-        textSize(14);
-        scale(1, -1, 1);  // Otherwise text is upside-down
-        text(this.destFloor, 0, 0);
         pop();
     }
 }

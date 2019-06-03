@@ -31,7 +31,8 @@ class Dispatcher {
             rider.draw();
         });
 
-        if (random(30) < 1) {
+        const spawnProb1InN  = map(sin(millis() / 1e5), -1, 1, 150, 5);
+        if (random(spawnProb1InN) < 1) {
             const start = randomFloor();
             let end = randomFloor();
             while (start === end) {

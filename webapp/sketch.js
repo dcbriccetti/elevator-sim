@@ -12,6 +12,7 @@ const dispatcher = new Dispatcher();
 const cars = Array.from(Array(NUM_CARS).keys(), n => new Car(n + 1));
 const DOOR = {width: CAR_DIMS.width / 4, height: CAR_DIMS.height, depth: 5};
 let font;
+let mouseMovedInitially = false;
 
 function preload() {
     font = loadFont('assets/Asimov.otf');
@@ -28,10 +29,14 @@ function randomFloor() {
     return Math.floor(random(numFloors) + 1);
 }
 
+function mouseMoved() {
+    mouseMovedInitially = true;
+}
+
 function draw() {
     const avgCarY = cars.map(car => car.y).reduce((a, b) => a + b, 0) / cars.length;
     camera(0, -avgCarY, (height/2.0) / tan(PI*30.0 / 180.0), 0, 0, 0, 0, 1, 0);
-    rotateY(map(mouseX, 0, width, -TAU / 8, TAU / 8));
+    if (mouseMovedInitially) rotateY(map(mouseX, 0, width, -TAU / 8, TAU / 8));
     beInQuadrant1();
     background(240);
 
