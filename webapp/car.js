@@ -1,13 +1,20 @@
-class Car {
-    constructor(carNumber) {
+export default class Car {
+    constructor(p, carDims, floor1Y, carNumber) {
+        this.p = p;
+        this.carDims = carDims;
+        this.floor1Y = floor1Y;
+        this.carNumber = carNumber;
         this.STATE_IDLE    = 1;
         this.STATE_MOVING  = 2;
         this.STATE_OPENING = 3;
         this.STATE_OPEN    = 4;
         this.STATE_CLOSING = 5;
+        this.doorDims = {width: carDims.width / 4, height: carDims.height, depth: 5};
 
-        this.carNumber = carNumber;
-        this.y = yFromFloor(1);
+        this.OPEN_MILLIS = 1500;
+        this.CAR_LEFT_MARGIN = 50;
+        this.CAR_HORZ_SPACING = this.carDims.width * 2;
+        this.y = p.yFromFloor(1);
         this.state = this.STATE_IDLE;
         this.doorOpen = 0;  // 0…1 = closed…open
         this.destFloors = [];
@@ -19,44 +26,47 @@ class Car {
     }
 
     drawCar() {
-        stroke('silver');
-        strokeWeight(2);
-        fill('rgba(75%, 75%, 100%, 0.2)');
-        push();
+        const p = this.p;
+        p.stroke('silver');
+        p.strokeWeight(2);
+        p.fill('rgba(75%, 75%, 100%, 0.2)');
+        p.push();
 
-        translate(this.carCenterX(),
-            this.y + CAR_DIMS.height / 2, this.carCenterZ());
-        box(CAR_DIMS.width, CAR_DIMS.height, CAR_DIMS.depth);
+        p.translate(this.carCenterX(),
+            this.y + this.carDims.height / 2, this.carCenterZ());
+        p.box(this.carDims.width, this.carDims.height, this.carDims.depth);
         this.drawDoors();
-        pop();
+        p.pop();
     }
 
     carCenterZ() {
-        return -CAR_DIMS.depth;
+        return -this.carDims.depth;
     }
 
     carCenterX() {
-        return CAR_LEFT_MARGIN + (this.carNumber - 1) * CAR_HORZ_SPACING;
+        return this.CAR_LEFT_MARGIN + (this.carNumber - 1) * this.CAR_HORZ_SPACING;
     }
 
     drawDoors() {
-        strokeWeight(1);
-        fill('rgba(75%, 100%, 75%, 0.5)');
+        const p = this.p;
+        p.strokeWeight(1);
+        p.fill('rgba(75%, 100%, 75%, 0.5)');
 
         // Bring doors to front of car
-        translate(0, 0, CAR_DIMS.depth / 2 - DOOR.depth);
-        const doorTravel = CAR_DIMS.width / 4;
-        const xDoorDisplacement = CAR_DIMS.width / 8 + doorTravel * this.doorOpen;
+        p.translate(0, 0, this.carDims.depth / 2 - this.doorDims.depth);
+        const doorTravel = this.carDims.width / 4;
+        const xDoorDisplacement = this.carDims.width / 8 + doorTravel * this.doorOpen;
 
         [1, -1].forEach(sign => {
-            push();
-            translate(sign * xDoorDisplacement, 0, 0);
-            box(DOOR.width, DOOR.height, DOOR.depth);
-            pop();
+            p.push();
+            p.translate(sign * xDoorDisplacement, 0, 0);
+            p.box(this.doorDims.width, this.doorDims.height, this.doorDims.depth);
+            p.pop();
         });
     }
 
     update() {
+        const p = this.p;
         switch (this.state) {
             case this.STATE_IDLE:
                 if (this.destFloors.length > 0) {
@@ -64,7 +74,7 @@ class Car {
                     this.removeCurrentFloorFromDest();
                     console.log(`Car ${this.carNumber} moving to ${this.destFloors}`);
                     this.startY = this.y;
-                    this.endY = yFromFloor(this.destFloors[0]);
+                    this.endY = p.yFromFloor(this.destFloors[0]);
                     this.travelDist = Math.abs(this.endY - this.startY);
                 }
                 break;
@@ -73,8 +83,8 @@ class Car {
                 const travelPart = Math.abs(absTraveled / this.travelDist);
                 const travelLeft = this.endY - this.y;
                 const absTravelLeft = Math.abs(travelLeft);
-                const partOfPi = map(travelPart, 0, 1, 0, PI);
-                const speed = Math.min(absTravelLeft, 1 + sin(partOfPi) * 30);
+                const partOfPi = p.map(travelPart, 0, 1, 0, p.PI);
+                const speed = Math.min(absTravelLeft, 1 + p.sin(partOfPi) * 30);
                 if (travelLeft > 0) this.y += speed;
                 else if (travelLeft < 0) this.y -= speed;
                 else {
@@ -87,12 +97,12 @@ class Car {
                     this.doorOpen += 0.05;  // Open doors
                 } else {
                     this.state = this.STATE_OPEN;
-                    this.openSince = millis();
+                    this.openSince = p.millis();
                 }
                 break;
             case this.STATE_OPEN:
-                const timeToClose = this.openSince + OPEN_MILLIS;
-                const timeToWait = timeToClose - millis();
+                const timeToClose = this.openSince + this.OPEN_MILLIS;
+                const timeToWait = timeToClose - p.millis();
                 if (timeToWait <= 0) {
                     this.state = this.STATE_CLOSING;
                 }
@@ -109,11 +119,7 @@ class Car {
     }
 
     removeCurrentFloorFromDest() {
-        this.destFloors = this.destFloors.filter(f => yFromFloor(f) !== this.y);
-    }
-
-    atTargetFloor() {
-        return yFromFloor(this.destFloors[0]) === this.y;
+        this.destFloors = this.destFloors.filter(f => this.p.yFromFloor(f) !== this.y);
     }
 
     goTo(floor) {
@@ -124,14 +130,18 @@ class Car {
     }
 
     drawRails() {
-        noStroke();
-        fill(128, 16);
-        [-CAR_DIMS.width / 2, CAR_DIMS.width / 2].forEach(xOff => {
-            [-CAR_DIMS.depth / 2, CAR_DIMS.depth / 2].forEach(zOff => {
-                push();
-                translate(this.carCenterX() + xOff, height / 2, this.carCenterZ() + zOff);
-                box(2, height - FLOOR_1_Y * 2, 1);
-                pop();
+        const p = this.p;
+        p.noStroke();
+        p.fill(128, 16);
+        const cd = this.carDims;
+        const hw = cd.width / 2;
+        const hd = cd.depth / 2;
+        [-hw, hw].forEach(xOff => {
+            [-hd, hd].forEach(zOff => {
+                p.push();
+                p.translate(this.carCenterX() + xOff, p.height / 2, this.carCenterZ() + zOff);
+                p.box(2, p.height - this.floor1Y * 2, 1);
+                p.pop();
             });
         });
     }

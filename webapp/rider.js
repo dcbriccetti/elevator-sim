@@ -1,5 +1,7 @@
-class Rider {
-    constructor(startFloor, destFloor, cars) {
+export default class Rider {
+    constructor(p, startFloor, destFloor, cars) {
+        this.p = p;
+        this.carDims = cars[0].carDims;
         this.STATE_ARRIVING = 1;
         this.STATE_WAITING = 2;
         this.STATE_BOARDING = 3;
@@ -9,21 +11,22 @@ class Rider {
         this.floor = startFloor;
         this.destFloor = destFloor;
         this.cars = cars;
-        this.height = randomGaussian(10, 2);
-        this.width = randomGaussian(5, 2);
-        this.pos = createVector(0, yFromFloor(this.floor), this.randomFloorZ());
-        this.waitPos = createVector(width * 0.2 + randomGaussian(width / 8, width / 10), this.pos.y, this.pos.z);
+        this.height = p.randomGaussian(10, 2);
+        this.width = p.randomGaussian(5, 2);
+        this.pos = p.createVector(0, p.yFromFloor(this.floor), this.randomFloorZ());
+        this.waitPos = p.createVector(p.width * 0.2 + p.randomGaussian(p.width / 8, p.width / 10), this.pos.y, this.pos.z);
         this.state = this.STATE_ARRIVING;
         this.carIn = undefined;
         console.log(`Rider on ${startFloor} going to ${destFloor}`);
-        dispatcher.call(this.floor);
     }
 
     randomFloorZ() {
-        return map(random(1), 0, 1, -20, 20);
+        const p = this.p;
+        return p.map(p.random(1), 0, 1, -20, 20);
     }
 
     update() {
+        const p = this.p;
         const STEP_SPEED = 8;
         switch (this.state) {
             case this.STATE_ARRIVING:
@@ -35,13 +38,13 @@ class Rider {
                 }
                 break;
             case this.STATE_WAITING:
-                const openCar = this.cars.find(car => car.state === car.STATE_OPEN && car.y === yFromFloor(this.floor));
+                const openCar = this.cars.find(car => car.state === car.STATE_OPEN && car.y === p.yFromFloor(this.floor));
                 if (openCar) {
-                    const dx = CAR_DIMS.width * 0.4;
-                    const dz = CAR_DIMS.depth * 0.4;
-                    const carEnterPos = createVector(openCar.carCenterX(), this.pos.y, openCar.carCenterZ() + CAR_DIMS.depth);
-                    const carPos = createVector(openCar.carCenterX() + map(random(1), 0, 1, -dx, dx), this.pos.y,
-                        openCar.carCenterZ() + map(random(1), 0, 1, -dz, dz));
+                    const dx = this.carDims.width * 0.4;
+                    const dz = this.carDims.depth * 0.4;
+                    const carEnterPos = p.createVector(openCar.carCenterX(), this.pos.y, openCar.carCenterZ() + this.carDims.depth);
+                    const carPos = p.createVector(openCar.carCenterX() + p.map(p.random(1), 0, 1, -dx, dx), this.pos.y,
+                        openCar.carCenterZ() + p.map(p.random(1), 0, 1, -dz, dz));
                     this.path = [carEnterPos, carPos];
                     this.state = this.STATE_BOARDING;
                     this.carIn = openCar;
@@ -63,7 +66,7 @@ class Rider {
                 break;
             case this.STATE_RIDING:
                 this.pos.y = this.carIn.y;
-                if (this.carIn.state === this.carIn.STATE_OPEN && this.carIn.y === yFromFloor(this.destFloor)) {
+                if (this.carIn.state === this.carIn.STATE_OPEN && this.carIn.y === p.yFromFloor(this.destFloor)) {
                     this.state = this.STATE_EXITING;
                     this.exitZ = this.randomFloorZ();
                 }
@@ -73,7 +76,7 @@ class Rider {
                     this.pos.z += 3;
                 } else {
                     this.pos.x += STEP_SPEED;
-                    if (this.pos.x >= width * 0.9) {
+                    if (this.pos.x >= p.width * 0.9) {
                         this.state = this.STATE_EXITED;
                     }
                 }
@@ -84,34 +87,35 @@ class Rider {
     draw() {
         if (this.state === this.STATE_EXITED) return;
 
-        push();
+        const p = this.p;
+        p.push();
         const LEG_LENGTH = 6;
-        translate(this.pos.x, this.pos.y + LEG_LENGTH, this.pos.z);
+        p.translate(this.pos.x, this.pos.y + LEG_LENGTH, this.pos.z);
         const fadeThreshold = 0.8;
         const arrivingFadeThreshold = 1 - fadeThreshold;
         const maxAlpha = 200;
         let alpha = maxAlpha;
-        if (this.state === this.STATE_ARRIVING && this.pos.x < width * arrivingFadeThreshold) {
-            alpha = map(this.pos.x, 0, width * arrivingFadeThreshold, 0, maxAlpha);
-        } else if (this.state === this.STATE_EXITING && this.pos.x > width * fadeThreshold) {
-            alpha = map(this.pos.x, width * fadeThreshold, width, maxAlpha, 0);
+        if (this.state === this.STATE_ARRIVING && this.pos.x < p.width * arrivingFadeThreshold) {
+            alpha = p.map(this.pos.x, 0, p.width * arrivingFadeThreshold, 0, maxAlpha);
+        } else if (this.state === this.STATE_EXITING && this.pos.x > p.width * fadeThreshold) {
+            alpha = p.map(this.pos.x, p.width * fadeThreshold, p.width, maxAlpha, 0);
         }
-        push();
+        p.push();
         const legLength = 4;
-        translate(0, this.height / 2 + legLength, 0);
-        stroke(128, alpha);
-        fill(255, 255, 0, alpha);
-        ellipsoid(this.width, this.height, this.width);
-        pop();
+        p.translate(0, this.height / 2 + legLength, 0);
+        p.stroke(128, alpha);
+        p.fill(255, 255, 0, alpha);
+        p.ellipsoid(this.width, this.height, this.width);
+        p.pop();
 
         if (this.state !== this.STATE_EXITING) { // Skip number when on target floor and leaving
-            fill(0, alpha);
-            stroke(0, alpha);
-            translate(0, this.height * 3, 0);
-            textSize(14);
-            scale(1, -1, 1);  // Otherwise text is upside-down
-            text(this.destFloor, 0, 0);
+            p.fill(0, alpha);
+            p.stroke(0, alpha);
+            p.translate(0, this.height * 3, 0);
+            p.textSize(14);
+            p.scale(1, -1, 1);  // Otherwise text is upside-down
+            p.text(this.destFloor, 0, 0);
         }
-        pop();
+        p.pop();
     }
 }
