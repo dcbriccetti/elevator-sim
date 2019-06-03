@@ -5,9 +5,9 @@ class Dispatcher {
     }
 
     call(floor) {
-        // if (! this.queue.find(el => el === floor)) {
+        if (! this.queue.find(el => el === floor)) {
             this.queue.push(floor);
-        // }
+        }
     }
 
     process(cars) {
@@ -31,7 +31,7 @@ class Dispatcher {
             rider.draw();
         });
 
-        if (random(100) < 1) {
+        if (random(30) < 1) {
             const start = randomFloor();
             let end = randomFloor();
             while (start === end) {
@@ -39,6 +39,6 @@ class Dispatcher {
             }
             this.riders.push(new Rider(start, end, cars));
         }
-        this.riders = this.riders.filter(rider => rider.state !== rider.STATE_EXITING);
+        this.riders = this.riders.filter(rider => rider.state !== rider.STATE_EXITED);
     }
 }

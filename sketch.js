@@ -1,6 +1,6 @@
 const NUM_CARS = 8;
 const FLOOR_1_Y = 20;
-const OPEN_MILLIS = 3000;
+const OPEN_MILLIS = 1500;
 const CAR_DIMS = {width: 30, height: 45, depth: 30};
 const STORY_HEIGHT = CAR_DIMS.height * 2;
 const CAR_LEFT_MARGIN = 50;
@@ -11,10 +11,17 @@ const dispatcher = new Dispatcher();
 
 const cars = Array.from(Array(NUM_CARS).keys(), n => new Car(n + 1));
 const DOOR = {width: CAR_DIMS.width / 4, height: CAR_DIMS.height, depth: 5};
+let font;
+
+function preload() {
+    font = loadFont('assets/Asimov.otf');
+}
 
 function setup() {
-    createCanvas(600, 800, WEBGL);
+    createCanvas(600, 1000, WEBGL).parent('main');
     numFloors = Math.floor(height / STORY_HEIGHT);
+    textFont(font);
+    textAlign(CENTER, CENTER);
 }
 
 function randomFloor() {
@@ -39,12 +46,13 @@ function draw() {
 }
 
 function drawFloors() {
-    fill(0, 0, 100, 50);
+    noStroke();
+    fill(0, 0, 100, 20);
     for (let floor = 1; floor <= numFloors; ++floor) {
         push();
         const floorHeight = 4;
-        translate(width / 2, yFromFloor(floor) - floorHeight / 2, 0);
-        box(width, floorHeight, floor === 1 ? 150 : 50);
+        translate(width / 2, yFromFloor(floor) - floorHeight / 2, floor === 1 ? -25 : 0);
+        box(width, floorHeight, floor === 1 ? 100 : 50);
         pop();
     }
 }

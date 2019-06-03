@@ -61,22 +61,30 @@ class Car {
             case this.STATE_IDLE:
                 if (this.destFloors.length > 0) {
                     this.state = this.STATE_MOVING;
-                    this.destFloors = this.destFloors.filter(f => yFromFloor(f) !== this.y);
-                    console.log(`Car ${this.carNumber} moving to ${this.destFloors}`)
+                    this.removeCurrentFloorFromDest();
+                    console.log(`Car ${this.carNumber} moving to ${this.destFloors}`);
+                    this.startY = this.y;
+                    this.endY = yFromFloor(this.destFloors[0]);
+                    this.travelDist = Math.abs(this.endY - this.startY);
                 }
                 break;
             case this.STATE_MOVING:
-                const travelLeft = Math.floor(yFromFloor(this.destFloors[0]) - this.y);
-                if (travelLeft > 0) this.y += 5;
-                else if (travelLeft < 0) this.y -= 5;
+                const absTraveled = Math.abs(this.startY - this.y);
+                const travelPart = Math.abs(absTraveled / this.travelDist);
+                const travelLeft = this.endY - this.y;
+                const absTravelLeft = Math.abs(travelLeft);
+                const partOfPi = map(travelPart, 0, 1, 0, PI);
+                const speed = Math.min(absTravelLeft, 1 + sin(partOfPi) * 30);
+                if (travelLeft > 0) this.y += speed;
+                else if (travelLeft < 0) this.y -= speed;
                 else {
                     this.state = this.STATE_OPENING;
-                    this.destFloors.pop();
+                    this.removeCurrentFloorFromDest();
                 }
                 break;
             case this.STATE_OPENING:
                 if (this.doorOpen < 1.0) {
-                    this.doorOpen += 0.01;  // Open doors
+                    this.doorOpen += 0.05;  // Open doors
                 } else {
                     this.state = this.STATE_OPEN;
                     this.openSince = millis();
@@ -91,13 +99,17 @@ class Car {
                 break;
             case this.STATE_CLOSING:
                 if (this.doorOpen > 0) {
-                    this.doorOpen -= 0.01;  // Close doors
+                    this.doorOpen -= 0.05;  // Close doors
                 } else {
                     this.state = this.STATE_IDLE;
                     this.doorOpen = 0;
                 }
                 break;
         }
+    }
+
+    removeCurrentFloorFromDest() {
+        this.destFloors = this.destFloors.filter(f => yFromFloor(f) !== this.y);
     }
 
     atTargetFloor() {
