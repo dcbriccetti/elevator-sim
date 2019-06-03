@@ -1,10 +1,10 @@
 const NUM_CARS = 8;
 const FLOOR_1_Y = 20;
 const OPEN_MILLIS = 1500;
-const CAR_DIMS = {width: 30, height: 45, depth: 30};
+const CAR_DIMS = {width: 35, height: 45, depth: 50};
 const STORY_HEIGHT = CAR_DIMS.height * 2;
 const CAR_LEFT_MARGIN = 50;
-const CAR_HORZ_SPACING = CAR_DIMS.width * 2.5;
+const CAR_HORZ_SPACING = CAR_DIMS.width * 2;
 let numFloors;
 
 const dispatcher = new Dispatcher();
