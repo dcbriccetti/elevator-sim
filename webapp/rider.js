@@ -1,24 +1,32 @@
 export default class Rider {
     constructor(p, startFloor, destFloor, cars) {
         this.p = p;
+        this.startFloor = startFloor;
+        this.destFloor = destFloor;
+        this.cars = cars;
         this.carDims = cars[0].settings.geom.car;
+        console.log(`Rider on ${startFloor} going to ${destFloor}`);
         this.STATE_ARRIVING = 1;
         this.STATE_WAITING = 2;
         this.STATE_BOARDING = 3;
         this.STATE_RIDING = 4;
         this.STATE_EXITING = 5;
         this.STATE_EXITED = 6;
-        this.floor = startFloor;
-        this.destFloor = destFloor;
-        this.cars = cars;
-        this.height = p.randomGaussian(cars[0].settings.geom.car.y / 2, 2);
-        this.width = p.randomGaussian(this.height / 4, 2);
-        this.pos = p.createVector(0, p.yFromFloor(this.floor), this.randomFloorZ());
-        this.waitPos = p.createVector(p.width * 0.2 + p.randomGaussian(p.width / 8, p.width / 10), this.pos.y, this.pos.z);
+        this.height = p.randomGaussian(this.carDims.y / 2, 4);
+        this.width = Math.max(6, p.randomGaussian(this.height / 4, 4));
+        const neg1IfComingFromRight = this.randomDirection();
+        const enterX = p.width / 2 - neg1IfComingFromRight * p.width / 2;
+        this.pos = p.createVector(enterX, p.yFromFloor(this.startFloor), this.randomFloorZ());
+        const waitX = enterX + neg1IfComingFromRight * p.randomGaussian(p.width / 4, p.width / 10);
+        this.waitPos = p.createVector(waitX, this.pos.y, this.pos.z);
         this.state = this.STATE_ARRIVING;
         this.carIn = undefined;
-        console.log(`Rider on ${startFloor} going to ${destFloor}`);
         this.color = [p.random(255), p.random(255), p.random(255)];
+        this.movementPerUpdate = p.constrain(p.randomGaussian(10, 5), 8, 20);
+    }
+
+    randomDirection() {
+        return this.p.random(1) < 0.5 ? -1 : 1;
     }
 
     randomFloorZ() {
@@ -28,61 +36,86 @@ export default class Rider {
 
     update() {
         const p = this.p;
-        const STEP_SPEED = 8;
         switch (this.state) {
             case this.STATE_ARRIVING:
-                const xArrivingLeft = this.waitPos.x - this.pos.x;
-                if (xArrivingLeft > 0) {
-                    this.pos.x += Math.min(STEP_SPEED, xArrivingLeft);
-                } else {
-                    this.state = this.STATE_WAITING;
-                }
+                this.arrive();
                 break;
             case this.STATE_WAITING:
-                const openCar = this.cars.find(car => car.state === car.STATE_OPEN && car.y === p.yFromFloor(this.floor));
-                if (openCar) {
-                    const dx = this.carDims.x * 0.4;
-                    const dz = this.carDims.z * 0.4;
-                    const carEnterPos = p.createVector(openCar.carCenterX(), this.pos.y, openCar.carCenterZ() + this.carDims.z);
-                    const carPos = p.createVector(openCar.carCenterX() + p.map(p.random(1), 0, 1, -dx, dx), this.pos.y,
-                        openCar.carCenterZ() + p.map(p.random(1), 0, 1, -dz, dz));
-                    this.path = [carEnterPos, carPos];
-                    this.state = this.STATE_BOARDING;
-                    this.carIn = openCar;
-                    this.carIn.goTo(this.destFloor);
-                }
+                this.waitForCar(p);
                 break;
             case this.STATE_BOARDING:
-                const dest = this.path[0];
-                const pointerToDest = p5.Vector.sub(dest, this.pos);
-                const distToDest = pointerToDest.mag();
-                const step = p5.Vector.mult(pointerToDest.normalize(), Math.min(distToDest, STEP_SPEED));
-                this.pos.add(step);
-                if (distToDest <= STEP_SPEED) {
-                    this.path.shift();
-                    if (this.path.length === 0) {
-                        this.state = this.STATE_RIDING;
-                    }
-                }
+                this.followPath(this.boardingPath, this.STATE_RIDING);
                 break;
             case this.STATE_RIDING:
-                this.pos.y = this.carIn.y;
-                if (this.carIn.state === this.carIn.STATE_OPEN && this.carIn.y === p.yFromFloor(this.destFloor)) {
-                    this.state = this.STATE_EXITING;
-                    this.exitZ = this.randomFloorZ();
-                }
+                this.ride(p);
                 break;
             case this.STATE_EXITING:
-                if (this.pos.z < this.exitZ) {
-                    this.pos.z += 3;
-                } else {
-                    this.pos.x += STEP_SPEED;
-                    if (this.pos.x >= p.width * 0.9) {
-                        this.state = this.STATE_EXITED;
-                    }
-                }
+                this.followPath(this.exitingPath, this.STATE_EXITED);
                 break;
         }
+    }
+
+    arrive() {
+        const distToWaitPos = this.moveToward(this.waitPos);
+        if (distToWaitPos < this.movementPerUpdate) {
+            this.state = this.STATE_WAITING;
+        }
+    }
+
+    waitForCar(p) {
+        const openCar = this.cars.find(car => car.state === car.STATE_OPEN && car.y === p.yFromFloor(this.startFloor));
+        if (openCar) {
+            this.carIn = openCar;
+            this.carIn.goTo(this.destFloor);
+            const cd = this.carDims;
+            const outsideDoor = this.outsideDoorPos(p, openCar, cd);
+            const insideCar = p.createVector(openCar.carCenterX() + this.fuzz(cd.x * 0.4), this.pos.y,
+                openCar.carCenterZ() + this.fuzz(cd.z * 0.4));
+            this.boardingPath = [outsideDoor, insideCar];
+            this.state = this.STATE_BOARDING;
+        }
+    }
+
+    outsideDoorPos(p, openCar, cd) {
+        return p.createVector(openCar.carCenterX() + this.fuzz(2),
+            this.pos.y, openCar.carCenterZ() + cd.z + this.fuzz(2));
+    }
+
+    ride(p) {
+        this.pos.y = this.carIn.y;
+        if (this.carIn.state === this.carIn.STATE_OPEN && this.carIn.y === p.yFromFloor(this.destFloor)) {
+            const cd = this.carDims;
+            const nearDoorInsideCar = p.createVector(this.carIn.carCenterX() + this.fuzz(2), this.pos.y,
+                this.carIn.carCenterZ() + cd.z / 2 - 5 + this.fuzz(2));
+            const outsideDoor = this.outsideDoorPos(p, this.carIn, this.carDims);
+            const exitPoint = p.createVector(p.width / 2 - this.randomDirection() * p.width / 2,
+                this.pos.y, this.randomFloorZ());
+            this.exitingPath = [nearDoorInsideCar, outsideDoor, exitPoint];
+            this.state = this.STATE_EXITING;
+        }
+    }
+
+    fuzz(half) {
+        return this.p.map(this.p.random(1), 0, 1, -half, half);
+    }
+
+    followPath(path, nextState) {
+        const dest = path[0];
+        const distToDest = this.moveToward(dest);
+        if (distToDest <= this.movementPerUpdate) {
+            path.shift();
+            if (path.length === 0) {
+                this.state = nextState;
+            }
+        }
+    }
+
+    moveToward(dest) {
+        const pointerToDest = p5.Vector.sub(dest, this.pos);
+        const distToDest = pointerToDest.mag();
+        const step = p5.Vector.mult(pointerToDest.normalize(), Math.min(distToDest, this.movementPerUpdate));
+        this.pos.add(step);
+        return distToDest;
     }
 
     draw() {
@@ -91,15 +124,7 @@ export default class Rider {
         const p = this.p;
         p.push();
         p.translate(this.pos.x, this.pos.y, this.pos.z);
-        const fadeThreshold = 0.8;
-        const arrivingFadeThreshold = 1 - fadeThreshold;
-        const maxAlpha = 200;
-        let alpha = maxAlpha;
-        if (this.state === this.STATE_ARRIVING && this.pos.x < p.width * arrivingFadeThreshold) {
-            alpha = p.map(this.pos.x, 0, p.width * arrivingFadeThreshold, 0, maxAlpha);
-        } else if (this.state === this.STATE_EXITING && this.pos.x > p.width * fadeThreshold) {
-            alpha = p.map(this.pos.x, p.width * fadeThreshold, p.width, maxAlpha, 0);
-        }
+        let alpha = 200;
         p.push();
         const legLength = 4;
         p.translate(0, this.height / 2 + legLength, 0);

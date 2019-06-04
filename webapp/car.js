@@ -138,10 +138,10 @@ export default class Car {
         p.noStroke();
         p.fill(128, 16);
         const cd = this.settings.geom.car;
-        const hw = cd.x / 2;
-        const hd = cd.z / 2;
-        [-hw, hw].forEach(xOff => {
-            [-hd, hd].forEach(zOff => {
+        const halfCarWidth = cd.x / 2;
+        const halfCarDepth = cd.z / 2;
+        [-halfCarWidth, halfCarWidth].forEach(xOff => {
+            [-halfCarDepth, halfCarDepth].forEach(zOff => {
                 p.push();
                 p.translate(this.carCenterX() + xOff, p.height / 2, this.carCenterZ() + zOff);
                 p.box(2, p.height, 1);
