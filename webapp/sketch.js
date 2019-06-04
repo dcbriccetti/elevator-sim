@@ -2,17 +2,18 @@ import Dispatcher from './dispatcher.js'
 import Car from './car.js'
 
 new p5(p => {
-    const NUM_CARS = 8;
-    const FLOOR_1_Y = 20;
-    const CAR_DIMS = {width: 35, height: 45, depth: 50};
-    const STORY_HEIGHT = CAR_DIMS.height * 2;
+    const NUM_CARS = 1;
+    const FLOOR_1_Y = 10;
+    const CAR_DIMS = {width: 25, height: 25, depth: 40};
+    const STORY_HEIGHT = CAR_DIMS.height * 1.7;
     let font;
     let mouseHasMoved = false;
 
     p.yFromFloor = function(floor) {
         return FLOOR_1_Y + STORY_HEIGHT * (floor - 1);
     };
-    const cars = Array.from(Array(NUM_CARS).keys(), n => new Car(p, CAR_DIMS, FLOOR_1_Y, n + 1));
+    const canvasWidth = 1000;
+    const cars = Array.from(Array(NUM_CARS).keys(), n => new Car(p, canvasWidth, CAR_DIMS, FLOOR_1_Y, NUM_CARS, n + 1));
     const dispatcher = new Dispatcher(p, cars);
 
     p.preload = function() {
@@ -20,7 +21,7 @@ new p5(p => {
     };
 
     p.setup = function() {
-        p.createCanvas(600, 1000, p.WEBGL).parent('main');
+        p.createCanvas(600, canvasWidth, p.WEBGL).parent('main');
         p.numFloors = Math.floor(p.height / STORY_HEIGHT);
         p.textFont(font);
         p.textAlign(p.CENTER, p.CENTER);
@@ -56,7 +57,7 @@ new p5(p => {
         p.fill(0, 0, 100, 20);
         for (let floor = 1; floor <= p.numFloors; ++floor) {
             p.push();
-            const floorHeight = 16;
+            const floorHeight = 4;
             p.translate(p.width / 2, p.yFromFloor(floor) - floorHeight / 2, floor === 1 ? -25 : 0);
             p.box(p.width, floorHeight, floor === 1 ? 100 : 50);
             p.pop();

@@ -11,8 +11,8 @@ export default class Rider {
         this.floor = startFloor;
         this.destFloor = destFloor;
         this.cars = cars;
-        this.height = p.randomGaussian(10, 2);
-        this.width = p.randomGaussian(5, 2);
+        this.height = p.randomGaussian(cars[0].carDims.height / 2, 2);
+        this.width = p.randomGaussian(this.height / 4, 2);
         this.pos = p.createVector(0, p.yFromFloor(this.floor), this.randomFloorZ());
         this.waitPos = p.createVector(p.width * 0.2 + p.randomGaussian(p.width / 8, p.width / 10), this.pos.y, this.pos.z);
         this.state = this.STATE_ARRIVING;
@@ -89,8 +89,7 @@ export default class Rider {
 
         const p = this.p;
         p.push();
-        const LEG_LENGTH = 6;
-        p.translate(this.pos.x, this.pos.y + LEG_LENGTH, this.pos.z);
+        p.translate(this.pos.x, this.pos.y, this.pos.z);
         const fadeThreshold = 0.8;
         const arrivingFadeThreshold = 1 - fadeThreshold;
         const maxAlpha = 200;
@@ -105,14 +104,14 @@ export default class Rider {
         p.translate(0, this.height / 2 + legLength, 0);
         p.stroke(128, alpha);
         p.fill(255, 255, 0, alpha);
-        p.ellipsoid(this.width, this.height, this.width);
+        p.ellipsoid(this.width / 2, this.height / 2, this.width / 2);
         p.pop();
 
         if (this.state !== this.STATE_EXITING) { // Skip number when on target floor and leaving
             p.fill(0, alpha);
             p.stroke(0, alpha);
-            p.translate(0, this.height * 3, 0);
-            p.textSize(14);
+            p.translate(0, this.height * 2, 0);
+            p.textSize(12);
             p.scale(1, -1, 1);  // Otherwise text is upside-down
             p.text(this.destFloor, 0, 0);
         }
