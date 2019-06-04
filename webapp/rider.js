@@ -18,6 +18,7 @@ export default class Rider {
         this.state = this.STATE_ARRIVING;
         this.carIn = undefined;
         console.log(`Rider on ${startFloor} going to ${destFloor}`);
+        this.color = [p.random(255), p.random(255), p.random(255)];
     }
 
     randomFloorZ() {
@@ -103,7 +104,7 @@ export default class Rider {
         const legLength = 4;
         p.translate(0, this.height / 2 + legLength, 0);
         p.stroke(128, alpha);
-        p.fill(255, 255, 0, alpha);
+        p.fill(this.color[0], this.color[1], this.color[2], alpha);
         p.ellipsoid(this.width / 2, this.height / 2, this.width / 2);
         p.pop();
 

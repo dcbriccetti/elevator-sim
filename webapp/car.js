@@ -16,7 +16,7 @@ export default class Car {
         this.CAR_HORZ_SPACING = this.carDims.width + interCarSpacing;
         const carsGroupWidth = numCars * this.carDims.width + (numCars - 1) * interCarSpacing;
         const leftRightMargin = canvasWidth - carsGroupWidth;
-        this.CAR_LEFT_MARGIN = leftRightMargin / 2;
+        this.CAR_LEFT_MARGIN = 120; //leftRightMargin / 2;
         console.log(this.CAR_LEFT_MARGIN, canvasWidth, carsGroupWidth, interCarSpacing, numCars);
         this.y = p.yFromFloor(1);
         this.state = this.STATE_IDLE;
@@ -128,6 +128,7 @@ export default class Car {
     goTo(floor) {
         if (! this.destFloors.find(f => f === floor)) {
             this.destFloors.push(floor);
+            this.destFloors.sort((a, b) => a - b);
             console.log(`Car ${this.carNumber} requested at ${floor}`);
         }
     }

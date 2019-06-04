@@ -2,7 +2,7 @@ import Dispatcher from './dispatcher.js'
 import Car from './car.js'
 
 new p5(p => {
-    const NUM_CARS = 1;
+    const NUM_CARS = 8;
     const FLOOR_1_Y = 10;
     const CAR_DIMS = {width: 25, height: 25, depth: 40};
     const STORY_HEIGHT = CAR_DIMS.height * 1.7;
