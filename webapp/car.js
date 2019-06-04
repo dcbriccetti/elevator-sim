@@ -87,7 +87,8 @@ export default class Car {
                 const travelLeft = this.endY - this.y;
                 const absTravelLeft = Math.abs(travelLeft);
                 const partOfPi = p.map(travelPart, 0, 1, 0, p.PI);
-                const speed = Math.min(absTravelLeft, 1 + p.sin(partOfPi) * 30);
+                const speedMultiplier = this.settings.elevSpeed * 10;
+                const speed = Math.min(absTravelLeft, 1 + p.sin(partOfPi) * speedMultiplier);
                 if (travelLeft > 0) this.y += speed;
                 else if (travelLeft < 0) this.y -= speed;
                 else {
@@ -128,7 +129,6 @@ export default class Car {
     goTo(floor) {
         if (! this.destFloors.find(f => f === floor)) {
             this.destFloors.push(floor);
-            this.destFloors.sort((a, b) => a - b);
             console.log(`Car ${this.carNumber} requested at ${floor}`);
         }
     }
