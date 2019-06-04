@@ -1,7 +1,7 @@
 export default class Rider {
     constructor(p, startFloor, destFloor, cars) {
         this.p = p;
-        this.carDims = cars[0].carDims;
+        this.carDims = cars[0].settings.geom.car;
         this.STATE_ARRIVING = 1;
         this.STATE_WAITING = 2;
         this.STATE_BOARDING = 3;
@@ -11,7 +11,7 @@ export default class Rider {
         this.floor = startFloor;
         this.destFloor = destFloor;
         this.cars = cars;
-        this.height = p.randomGaussian(cars[0].carDims.height / 2, 2);
+        this.height = p.randomGaussian(cars[0].settings.geom.car.y / 2, 2);
         this.width = p.randomGaussian(this.height / 4, 2);
         this.pos = p.createVector(0, p.yFromFloor(this.floor), this.randomFloorZ());
         this.waitPos = p.createVector(p.width * 0.2 + p.randomGaussian(p.width / 8, p.width / 10), this.pos.y, this.pos.z);
@@ -41,9 +41,9 @@ export default class Rider {
             case this.STATE_WAITING:
                 const openCar = this.cars.find(car => car.state === car.STATE_OPEN && car.y === p.yFromFloor(this.floor));
                 if (openCar) {
-                    const dx = this.carDims.width * 0.4;
-                    const dz = this.carDims.depth * 0.4;
-                    const carEnterPos = p.createVector(openCar.carCenterX(), this.pos.y, openCar.carCenterZ() + this.carDims.depth);
+                    const dx = this.carDims.x * 0.4;
+                    const dz = this.carDims.z * 0.4;
+                    const carEnterPos = p.createVector(openCar.carCenterX(), this.pos.y, openCar.carCenterZ() + this.carDims.z);
                     const carPos = p.createVector(openCar.carCenterX() + p.map(p.random(1), 0, 1, -dx, dx), this.pos.y,
                         openCar.carCenterZ() + p.map(p.random(1), 0, 1, -dz, dz));
                     this.path = [carEnterPos, carPos];

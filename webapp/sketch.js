@@ -2,18 +2,27 @@ import Dispatcher from './dispatcher.js'
 import Car from './car.js'
 
 new p5(p => {
-    const NUM_CARS = 8;
-    const FLOOR_1_Y = 10;
-    const CAR_DIMS = {width: 25, height: 25, depth: 40};
-    const STORY_HEIGHT = CAR_DIMS.height * 1.7;
+    function createSettings() {
+        const car = p.createVector(1, 1, 1.5).mult(50);
+        return {
+            numCars: 5,
+            geom: {
+                canvas: p.createVector(600, 1000),
+                car: car,
+                storyHeight: car.y * 1.7
+            }
+        };
+    }
+
+    const settings = createSettings();
     let font;
     let mouseHasMoved = false;
 
     p.yFromFloor = function(floor) {
-        return FLOOR_1_Y + STORY_HEIGHT * (floor - 1);
+        return settings.geom.storyHeight * (floor - 1);
     };
     const canvasWidth = 1000;
-    const cars = Array.from(Array(NUM_CARS).keys(), n => new Car(p, canvasWidth, CAR_DIMS, FLOOR_1_Y, NUM_CARS, n + 1));
+    const cars = Array.from(Array(settings.numCars).keys(), n => new Car(p, settings, n + 1));
     const dispatcher = new Dispatcher(p, cars);
 
     p.preload = function() {
@@ -22,7 +31,7 @@ new p5(p => {
 
     p.setup = function() {
         p.createCanvas(600, canvasWidth, p.WEBGL).parent('main');
-        p.numFloors = Math.floor(p.height / STORY_HEIGHT);
+        p.numFloors = Math.floor(p.height / settings.geom.storyHeight);
         p.textFont(font);
         p.textAlign(p.CENTER, p.CENTER);
     };

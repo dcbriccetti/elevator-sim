@@ -1,23 +1,21 @@
 export default class Car {
-    constructor(p, canvasWidth, carDims, floor1Y, numCars, carNumber) {
+    constructor(p, settings, carNumber) {
         this.p = p;
-        this.carDims = carDims;
-        this.floor1Y = floor1Y;
+        this.settings = settings;
         this.carNumber = carNumber;
         this.STATE_IDLE    = 1;
         this.STATE_MOVING  = 2;
         this.STATE_OPENING = 3;
         this.STATE_OPEN    = 4;
         this.STATE_CLOSING = 5;
-        this.doorDims = {width: carDims.width / 4, height: carDims.height, depth: 5};
-
+        const gc = settings.geom.car;
+        this.doorDims = p.createVector(gc.x / 4, gc.y, 5);
         this.OPEN_MILLIS = 1500;
-        const interCarSpacing = this.carDims.width;
-        this.CAR_HORZ_SPACING = this.carDims.width + interCarSpacing;
-        const carsGroupWidth = numCars * this.carDims.width + (numCars - 1) * interCarSpacing;
-        const leftRightMargin = canvasWidth - carsGroupWidth;
-        this.CAR_LEFT_MARGIN = 120; //leftRightMargin / 2;
-        console.log(this.CAR_LEFT_MARGIN, canvasWidth, carsGroupWidth, interCarSpacing, numCars);
+        const interCarSpacing = gc.x;
+        this.CAR_HORZ_SPACING = gc.x + interCarSpacing;
+        const carsGroupWidth = settings.numCars * gc.x + (settings.numCars - 1) * interCarSpacing;
+        const leftRightMargin = settings.geom.canvas.x - carsGroupWidth;
+        this.CAR_LEFT_MARGIN = leftRightMargin / 2;
         this.y = p.yFromFloor(1);
         this.state = this.STATE_IDLE;
         this.doorOpen = 0;  // 0…1 = closed…open
@@ -35,15 +33,16 @@ export default class Car {
         p.strokeWeight(2);
         p.fill('rgba(75%, 75%, 100%, 0.2)');
         p.push();
+        const gc = this.settings.geom.car;
         p.translate(this.carCenterX(),
-            this.y + this.carDims.height / 2, this.carCenterZ());
-        p.box(this.carDims.width, this.carDims.height, this.carDims.depth);
+            this.y + gc.y / 2, this.carCenterZ());
+        p.box(gc.x, gc.y, gc.z);
         this.drawDoors();
         p.pop();
     }
 
     carCenterZ() {
-        return -this.carDims.depth;
+        return -this.settings.geom.car.z;
     }
 
     carCenterX() {
@@ -56,14 +55,15 @@ export default class Car {
         p.fill('rgba(75%, 100%, 75%, 0.5)');
 
         // Bring doors to front of car
-        p.translate(0, 0, this.carDims.depth / 2 - this.doorDims.depth);
-        const doorTravel = this.carDims.width / 4;
-        const xDoorDisplacement = this.carDims.width / 8 + doorTravel * this.doorOpen;
+        const gc = this.settings.geom.car;
+        p.translate(0, 0, gc.z / 2 - this.doorDims.z);
+        const doorTravel = gc.x / 4;
+        const xDoorDisplacement = gc.x / 8 + doorTravel * this.doorOpen;
 
         [1, -1].forEach(sign => {
             p.push();
             p.translate(sign * xDoorDisplacement, 0, 0);
-            p.box(this.doorDims.width, this.doorDims.height, this.doorDims.depth);
+            p.box(this.doorDims.x, this.doorDims.y, this.doorDims.z);
             p.pop();
         });
     }
@@ -137,14 +137,14 @@ export default class Car {
         const p = this.p;
         p.noStroke();
         p.fill(128, 16);
-        const cd = this.carDims;
-        const hw = cd.width / 2;
-        const hd = cd.depth / 2;
+        const cd = this.settings.geom.car;
+        const hw = cd.x / 2;
+        const hd = cd.z / 2;
         [-hw, hw].forEach(xOff => {
             [-hd, hd].forEach(zOff => {
                 p.push();
                 p.translate(this.carCenterX() + xOff, p.height / 2, this.carCenterZ() + zOff);
-                p.box(2, p.height - this.floor1Y * 2, 1);
+                p.box(2, p.height, 1);
                 p.pop();
             });
         });
