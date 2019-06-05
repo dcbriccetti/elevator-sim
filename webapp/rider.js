@@ -70,7 +70,7 @@ export default class Rider {
             const cd = this.carDims;
             const outsideDoor = this.outsideDoorPos(p, openCar, cd);
             const insideCar = p.createVector(openCar.carCenterX() + this.fuzz(cd.x * 0.4), this.pos.y,
-                openCar.carCenterZ() + this.fuzz(cd.z * 0.4));
+                openCar.settings.geom.carCenterZ + this.fuzz(cd.z * 0.4));
             this.boardingPath = [outsideDoor, insideCar];
             this.state = this.STATE_BOARDING;
         }
@@ -78,7 +78,7 @@ export default class Rider {
 
     outsideDoorPos(p, openCar, cd) {
         return p.createVector(openCar.carCenterX() + this.fuzz(2),
-            this.pos.y, openCar.carCenterZ() + cd.z + this.fuzz(2));
+            this.pos.y, openCar.settings.geom.carCenterZ + cd.z + this.fuzz(2));
     }
 
     ride(p) {
@@ -86,7 +86,7 @@ export default class Rider {
         if (this.carIn.state === this.carIn.STATE_OPEN && this.carIn.y === p.yFromFloor(this.destFloor)) {
             const cd = this.carDims;
             const nearDoorInsideCar = p.createVector(this.carIn.carCenterX() + this.fuzz(2), this.pos.y,
-                this.carIn.carCenterZ() + cd.z / 2 - 5 + this.fuzz(2));
+                this.carIn.settings.geom.carCenterZ + cd.z / 2 - 5 + this.fuzz(2));
             const outsideDoor = this.outsideDoorPos(p, this.carIn, this.carDims);
             const exitPoint = p.createVector(p.width / 2 - this.randomDirection() * p.width / 2,
                 this.pos.y, this.randomFloorZ());
@@ -122,25 +122,27 @@ export default class Rider {
         if (this.state === this.STATE_EXITED) return;
 
         const p = this.p;
-        p.push();
-        p.translate(this.pos.x, this.pos.y, this.pos.z);
-        let alpha = 200;
-        p.push();
-        const legLength = 4;
-        p.translate(0, this.height / 2 + legLength, 0);
-        p.stroke(128, alpha);
-        p.fill(this.color[0], this.color[1], this.color[2], alpha);
-        p.ellipsoid(this.width / 2, this.height / 2, this.width / 2);
-        p.pop();
+        p.pushed(() => {
+            p.translate(this.pos.x, this.pos.y, this.pos.z);
+            const alpha = 200;
+            p.pushed(() => {
+                const legLength = 4;
+                p.translate(0, this.height / 2 + legLength, 0);
+                p.stroke(128, alpha);
+                p.fill(this.color[0], this.color[1], this.color[2], alpha);
+                p.ellipsoid(this.width / 2, this.height / 2, this.width / 2);
+            });
 
-        if (this.state !== this.STATE_EXITING) { // Skip number when on target floor and leaving
-            p.fill(0, alpha);
-            p.stroke(0, alpha);
-            p.translate(0, this.height * 2, 0);
-            p.textSize(12);
-            p.scale(1, -1, 1);  // Otherwise text is upside-down
-            p.text(this.destFloor, 0, 0);
-        }
-        p.pop();
+            if (this.state !== this.STATE_EXITING) { // Skip number when on target floor and leaving
+                p.fill(0, alpha);
+                p.stroke(0, alpha);
+                p.pushed(() => {
+                    p.translate(0, this.height * 2, 0);
+                    p.scale(1, -1, 1);  // Otherwise text is upside-down
+                    p.textSize(12);
+                    p.text(this.destFloor, 0, 0);
+                });
+            }
+        });
     }
 }

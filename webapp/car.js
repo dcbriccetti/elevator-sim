@@ -32,17 +32,12 @@ export default class Car {
         p.stroke('silver');
         p.strokeWeight(2);
         p.fill('rgba(75%, 75%, 100%, 0.2)');
-        p.push();
-        const gc = this.settings.geom.car;
-        p.translate(this.carCenterX(),
-            this.y + gc.y / 2, this.carCenterZ());
-        p.box(gc.x, gc.y, gc.z);
-        this.drawDoors();
-        p.pop();
-    }
-
-    carCenterZ() {
-        return -this.settings.geom.car.z;
+        p.pushed(() => {
+            const gc = this.settings.geom.car;
+            p.translate(this.carCenterX(), this.y + gc.y / 2, this.settings.geom.carCenterZ);
+            p.box(gc.x, gc.y, gc.z);
+            this.drawDoors();
+        });
     }
 
     carCenterX() {
@@ -56,15 +51,18 @@ export default class Car {
 
         // Bring doors to front of car
         const gc = this.settings.geom.car;
-        p.translate(0, 0, gc.z / 2 - this.doorDims.z);
-        const doorTravel = gc.x / 4;
-        const xDoorDisplacement = gc.x / 8 + doorTravel * this.doorOpen;
+        const dd = this.doorDims;
+        p.pushed(() => {
+            p.translate(0, 0, gc.z / 2 - dd.z);
+            const doorTravel = gc.x / 4;
+            const xDoorDisplacement = gc.x / 8 + doorTravel * this.doorOpen;
 
-        [1, -1].forEach(sign => {
-            p.push();
-            p.translate(sign * xDoorDisplacement, 0, 0);
-            p.box(this.doorDims.x, this.doorDims.y, this.doorDims.z);
-            p.pop();
+            [1, -1].forEach(sign => {
+                p.pushed(() => {
+                    p.translate(sign * xDoorDisplacement, 0, 0);
+                    p.box(dd.x, dd.y, dd.z);
+                });
+            });
         });
     }
 
@@ -127,7 +125,7 @@ export default class Car {
     }
 
     goTo(floor) {
-        if (! this.destFloors.find(f => f === floor)) {
+        if (!this.destFloors.find(f => f === floor)) {
             this.destFloors.push(floor);
             console.log(`Car ${this.carNumber} requested at ${floor}`);
         }
@@ -142,10 +140,10 @@ export default class Car {
         const halfCarDepth = cd.z / 2;
         [-halfCarWidth, halfCarWidth].forEach(xOff => {
             [-halfCarDepth, halfCarDepth].forEach(zOff => {
-                p.push();
-                p.translate(this.carCenterX() + xOff, p.height / 2, this.carCenterZ() + zOff);
-                p.box(2, p.height, 1);
-                p.pop();
+                p.pushed(() => {
+                    p.translate(this.carCenterX() + xOff, p.height / 2, this.settings.geom.carCenterZ + zOff);
+                    p.box(2, p.height, 1);
+                });
             });
         });
     }
