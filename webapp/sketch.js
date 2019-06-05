@@ -68,11 +68,15 @@ new p5(p => {
         p.push();
         block();
         p.pop();
-    }
+    };
 
     function setCameraBasedOnAvgCarHeight() {
         const avgCarY = cars.map(car => car.y).reduce((a, b) => a + b, 0) / cars.length;
         p.camera(0, -avgCarY, (p.height / 2.0) / p.tan(p.PI * 30.0 / 180.0), 0, 0, 0, 0, 1, 0); // Most args are defaults
+    }
+
+    function setDefaultCamera() {
+        p.camera(0, 0, (p.height / 2.0) / p.tan(p.PI * 30.0 / 180.0), 0, 0, 0, 0, 1, 0);
     }
 
     function rotateOnY() {
@@ -86,17 +90,18 @@ new p5(p => {
         p.background(240);
         if (settings.projectionType === 1) {
             p.ortho();
+            setDefaultCamera();
         } else {
             p.perspective();
             setCameraBasedOnAvgCarHeight();
         }
         rotateOnY();
         inQuadrant1(() => {
-            drawFloors();
             cars.forEach(car => {
                 car.update();
                 car.draw();
             });
+            drawFloors();
             dispatcher.process(cars);
         });
     };

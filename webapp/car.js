@@ -3,10 +3,10 @@ export default class Car {
         this.p = p;
         this.settings = settings;
         this.carNumber = carNumber;
-        this.STATE_IDLE    = 1;
-        this.STATE_MOVING  = 2;
+        this.STATE_IDLE = 1;
+        this.STATE_MOVING = 2;
         this.STATE_OPENING = 3;
-        this.STATE_OPEN    = 4;
+        this.STATE_OPEN = 4;
         this.STATE_CLOSING = 5;
         const gc = settings.geom.car;
         this.doorDims = p.createVector(gc.x / 4, gc.y, 5);
@@ -25,14 +25,71 @@ export default class Car {
 
     draw() {
         this.drawRails();
+        this.drawCablesAndCounterweight();
         this.drawCar();
+    }
+
+    drawRails() {
+        const p = this.p;
+        p.noStroke();
+        p.fill(128, 16);
+        const cd = this.settings.geom.car;
+        const halfCarWidth = cd.x / 2;
+        const halfCarDepth = cd.z / 2;
+        [-halfCarWidth, halfCarWidth].forEach(xOff => {
+            [-halfCarDepth, halfCarDepth].forEach(zOff => {
+                p.pushed(() => {
+                    p.translate(this.carCenterX() + xOff, p.height / 2, this.settings.geom.carCenterZ + zOff);
+                    p.box(2, p.height, 1);
+                });
+            });
+        });
+    }
+
+    drawCablesAndCounterweight() {
+        const p = this.p;
+        const geom = this.settings.geom;
+        const cg = geom.car;
+        const yCarTop = this.y + cg.y;
+        const carToCwDist = cg.z * 0.8;
+        const cwDepth = 5;
+        const backOfCar = geom.carCenterZ - cg.z / 2;
+        const cwZ = backOfCar - carToCwDist - cwDepth / 2;
+        const cwY = p.height - this.y;
+        const cwHeight = cg.y / 2;
+        const inst = this;
+
+        function drawCounterWeight() {
+            p.stroke(220);
+            p.noFill();
+            p.pushed(() => {
+                p.translate(inst.carCenterX(), cwY, cwZ);
+                p.box(cg.x, cwHeight, cwDepth);
+            });
+        }
+
+        drawCounterWeight();
+        this.drawCables(p, cwY + cwHeight / 2, p.height, cwZ);
+        this.drawCables(p, yCarTop, p.height, geom.carCenterZ);
+    }
+
+    drawCables(p, yBottom, yTop, cablesZ) {
+        p.stroke(180, 32);
+        p.noFill();
+        const yMiddle = yBottom + (yTop - yBottom) / 2;
+        [-3, 0, 3].forEach(xOff => {
+            p.pushed(() => {
+                p.translate(this.carCenterX() + xOff, yMiddle, cablesZ);
+                p.box(1, yTop - yBottom, 1);
+            });
+        });
     }
 
     drawCar() {
         const p = this.p;
         p.stroke('silver');
         p.strokeWeight(2);
-        p.fill('rgba(75%, 75%, 100%, 0.2)');
+        p.fill(194, 255 * 0.5);
         p.pushed(() => {
             const gc = this.settings.geom.car;
             p.translate(this.carCenterX(), this.y + gc.y / 2, this.settings.geom.carCenterZ);
@@ -48,12 +105,12 @@ export default class Car {
     drawDoors() {
         const p = this.p;
         p.strokeWeight(1);
-        p.fill('rgba(75%, 100%, 75%, 0.5)');
+        p.fill(230, 255 * 0.5);
 
-        // Bring doors to front of car
-        const gc = this.settings.geom.car;
-        const dd = this.doorDims;
         p.pushed(() => {
+            // Bring doors to front of car
+            const gc = this.settings.geom.car;
+            const dd = this.doorDims;
             p.translate(0, 0, gc.z / 2 - dd.z);
             const doorTravel = gc.x / 4;
             const xDoorDisplacement = gc.x / 8 + doorTravel * this.doorOpen;
@@ -106,8 +163,8 @@ export default class Car {
         if (this.destFloors.length > 0) {
             let nextDest = this.destFloors.find(f =>
                 this.movingUp ? p.yFromFloor(f) > this.y : p.yFromFloor(f) < this.y);
-            if (! nextDest) {
-                this.movingUp = ! this.movingUp;
+            if (!nextDest) {
+                this.movingUp = !this.movingUp;
                 this.sortDestinations();
                 nextDest = this.destFloors[0];
             }
@@ -149,22 +206,5 @@ export default class Car {
 
     sortDestinations() {
         this.destFloors.sort((a, b) => this.movingUp ? a - b : b - a);
-    }
-
-    drawRails() {
-        const p = this.p;
-        p.noStroke();
-        p.fill(128, 16);
-        const cd = this.settings.geom.car;
-        const halfCarWidth = cd.x / 2;
-        const halfCarDepth = cd.z / 2;
-        [-halfCarWidth, halfCarWidth].forEach(xOff => {
-            [-halfCarDepth, halfCarDepth].forEach(zOff => {
-                p.pushed(() => {
-                    p.translate(this.carCenterX() + xOff, p.height / 2, this.settings.geom.carCenterZ + zOff);
-                    p.box(2, p.height, 1);
-                });
-            });
-        });
     }
 }
