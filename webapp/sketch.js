@@ -24,7 +24,6 @@ new p5(p => {
     const settings = createSettings();
     const passengerLoadTypes = ['Varying', 'Very Light', 'Light', 'Moderate', 'Heavy', 'Very Heavy', 'Insane'];
     settings.passengerLoadNumManualLevels = passengerLoadTypes.length - 1; // The first is not manual
-    let font;
     let mouseHasMoved = false;
 
     p.yFromFloor = function(floor) {
@@ -32,10 +31,6 @@ new p5(p => {
     };
     const cars = Array.from(Array(settings.numCars).keys(), n => new Car(p, settings, n + 1));
     const dispatcher = new Dispatcher(p, settings, cars);
-
-    p.preload = function() {
-        font = p.loadFont('assets/Asimov.otf');
-    };
 
     function createKnobs() {
         const elevSpeed = p.select('#elevSpeed');
@@ -62,9 +57,6 @@ new p5(p => {
         const gc = settings.geom.canvas;
         p.createCanvas(gc.x, gc.y, p.WEBGL).parent('main');
         p.numFloors = Math.floor(p.height / settings.geom.storyHeight);
-        p.textFont(font);
-        p.textAlign(p.CENTER, p.CENTER);
-
         createKnobs();
     };
 

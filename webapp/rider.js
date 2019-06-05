@@ -23,6 +23,7 @@ export default class Rider {
         this.carIn = undefined;
         this.color = [p.random(255), p.random(255), p.random(255)];
         this.movementPerUpdate = p.constrain(p.randomGaussian(10, 5), 8, 20);
+        this.destNumberDisplay = this.setUpDestNumberDisplay(p);
     }
 
     randomDirection() {
@@ -133,14 +134,23 @@ export default class Rider {
                 p.ellipsoid(this.width / 2, this.height / 2, this.width / 2);
             });
 
-            p.fill(64);
-            p.noStroke();
             p.pushed(() => {
                 p.translate(0, this.height * 1.7, 0);
-                p.scale(1, -1, 1);  // Otherwise text is upside-down
-                p.textSize(12);
-                p.text(this.destFloor, 0, 0);
+                p.scale(0.5, -0.5, 1);  // Fix upside-down and shrink for better quality
+                p.texture(this.destNumberDisplay);
+                p.noStroke();
+                p.plane(25);
             });
         });
+    }
+
+    setUpDestNumberDisplay(p) {
+        const pg = p.createGraphics(25, 25);
+        pg.stroke(100);
+        pg.fill(100);
+        pg.textFont('sans-serif', 24);
+        pg.textAlign(p.CENTER);
+        pg.text(this.destFloor, 12, 25);
+        return pg;
     }
 }
