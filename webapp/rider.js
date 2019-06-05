@@ -128,21 +128,19 @@ export default class Rider {
             p.pushed(() => {
                 const legLength = 4;
                 p.translate(0, this.height / 2 + legLength, 0);
-                p.stroke(128, alpha);
-                p.fill(this.color[0], this.color[1], this.color[2], alpha);
+                p.noStroke();
+                p.fill(this.color[0], this.color[1], this.color[2]);
                 p.ellipsoid(this.width / 2, this.height / 2, this.width / 2);
             });
 
-            if (this.state !== this.STATE_EXITING) { // Skip number when on target floor and leaving
-                p.fill(0, alpha);
-                p.stroke(0, alpha);
-                p.pushed(() => {
-                    p.translate(0, this.height * 2, 0);
-                    p.scale(1, -1, 1);  // Otherwise text is upside-down
-                    p.textSize(12);
-                    p.text(this.destFloor, 0, 0);
-                });
-            }
+            p.fill(64);
+            p.noStroke();
+            p.pushed(() => {
+                p.translate(0, this.height * 1.7, 0);
+                p.scale(1, -1, 1);  // Otherwise text is upside-down
+                p.textSize(12);
+                p.text(this.destFloor, 0, 0);
+            });
         });
     }
 }

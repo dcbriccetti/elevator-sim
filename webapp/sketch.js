@@ -30,7 +30,6 @@ new p5(p => {
     p.yFromFloor = function(floor) {
         return settings.geom.storyHeight * (floor - 1);
     };
-    const canvasWidth = 1000;
     const cars = Array.from(Array(settings.numCars).keys(), n => new Car(p, settings, n + 1));
     const dispatcher = new Dispatcher(p, settings, cars);
 
@@ -60,7 +59,8 @@ new p5(p => {
     }
 
     p.setup = function() {
-        p.createCanvas(600, canvasWidth, p.WEBGL).parent('main');
+        const gc = settings.geom.canvas;
+        p.createCanvas(gc.x, gc.y, p.WEBGL).parent('main');
         p.numFloors = Math.floor(p.height / settings.geom.storyHeight);
         p.textFont(font);
         p.textAlign(p.CENTER, p.CENTER);

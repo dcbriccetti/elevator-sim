@@ -18,6 +18,7 @@ export default class Car {
         this.CAR_LEFT_MARGIN = leftRightMargin / 2;
         this.y = p.yFromFloor(1);
         this.state = this.STATE_IDLE;
+        this.movingUp = true;
         this.doorOpen = 0;  // 0…1 = closed…open
         this.destFloors = [];
     }
@@ -70,29 +71,10 @@ export default class Car {
         const p = this.p;
         switch (this.state) {
             case this.STATE_IDLE:
-                if (this.destFloors.length > 0) {
-                    this.state = this.STATE_MOVING;
-                    this.removeCurrentFloorFromDest();
-                    console.log(`Car ${this.carNumber} moving to ${this.destFloors}`);
-                    this.startY = this.y;
-                    this.endY = p.yFromFloor(this.destFloors[0]);
-                    this.travelDist = Math.abs(this.endY - this.startY);
-                }
+                this.idle(p);
                 break;
             case this.STATE_MOVING:
-                const absTraveled = Math.abs(this.startY - this.y);
-                const travelPart = Math.abs(absTraveled / this.travelDist);
-                const travelLeft = this.endY - this.y;
-                const absTravelLeft = Math.abs(travelLeft);
-                const partOfPi = p.map(travelPart, 0, 1, 0, p.PI);
-                const speedMultiplier = this.settings.elevSpeed * 10;
-                const speed = Math.min(absTravelLeft, 1 + p.sin(partOfPi) * speedMultiplier);
-                if (travelLeft > 0) this.y += speed;
-                else if (travelLeft < 0) this.y -= speed;
-                else {
-                    this.state = this.STATE_OPENING;
-                    this.removeCurrentFloorFromDest();
-                }
+                this.move(p);
                 break;
             case this.STATE_OPENING:
                 if (this.doorOpen < 1.0) {
@@ -120,6 +102,39 @@ export default class Car {
         }
     }
 
+    idle(p) {
+        if (this.destFloors.length > 0) {
+            let nextDest = this.destFloors.find(f =>
+                this.movingUp ? p.yFromFloor(f) > this.y : p.yFromFloor(f) < this.y);
+            if (! nextDest) {
+                this.movingUp = ! this.movingUp;
+                this.sortDestinations();
+                nextDest = this.destFloors[0];
+            }
+            this.state = this.STATE_MOVING;
+            console.log(`Car ${this.carNumber} moving to ${this.destFloors}`);
+            this.startY = this.y;
+            this.endY = p.yFromFloor(nextDest);
+            this.travelDist = Math.abs(this.endY - this.startY);
+        }
+    }
+
+    move(p) {
+        const absTraveled = Math.abs(this.startY - this.y);
+        const travelPart = Math.abs(absTraveled / this.travelDist);
+        const travelLeft = this.endY - this.y;
+        const absTravelLeft = Math.abs(travelLeft);
+        const partOfPi = p.map(travelPart, 0, 1, 0, p.PI);
+        const speedMultiplier = this.settings.elevSpeed * 10;
+        const speed = Math.min(absTravelLeft, 1 + p.sin(partOfPi) * speedMultiplier);
+        if (travelLeft > 0) this.y += speed;
+        else if (travelLeft < 0) this.y -= speed;
+        else {
+            this.state = this.STATE_OPENING;
+            this.removeCurrentFloorFromDest();
+        }
+    }
+
     removeCurrentFloorFromDest() {
         this.destFloors = this.destFloors.filter(f => this.p.yFromFloor(f) !== this.y);
     }
@@ -127,8 +142,13 @@ export default class Car {
     goTo(floor) {
         if (!this.destFloors.find(f => f === floor)) {
             this.destFloors.push(floor);
+            this.sortDestinations();
             console.log(`Car ${this.carNumber} requested at ${floor}`);
         }
+    }
+
+    sortDestinations() {
+        this.destFloors.sort((a, b) => this.movingUp ? a - b : b - a);
     }
 
     drawRails() {
