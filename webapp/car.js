@@ -1,3 +1,5 @@
+import MotorSound from './sound.js';
+
 export default class Car {
     constructor(p, settings, carNumber) {
         this.p = p;
@@ -21,6 +23,7 @@ export default class Car {
         this.movingUp = true;
         this.doorOpen = 0;  // 0…1 = closed…open
         this.destFloors = [];
+        this.sound = new MotorSound(settings.numCars === 1 ? 0 : p.map(carNumber, 1, settings.numCars, -0.8, 0.8));
     }
 
     draw() {
@@ -169,6 +172,7 @@ export default class Car {
                 nextDest = this.destFloors[0];
             }
             this.state = this.STATE_MOVING;
+            this.sound.osc.amp(p.map(this.settings.volume, 0, 10, 0, 0.3), 0.02);
             console.log(`Car ${this.carNumber} moving to ${this.destFloors}`);
             this.startY = this.y;
             this.endY = p.yFromFloor(nextDest);
@@ -182,11 +186,13 @@ export default class Car {
         const travelLeft = this.endY - this.y;
         const absTravelLeft = Math.abs(travelLeft);
         const partOfPi = p.map(travelPart, 0, 1, 0, p.PI);
-        const speedMultiplier = this.settings.elevSpeed * 10;
+        const speedMultiplier = this.settings.elevSpeed * 5;
         const speed = Math.min(absTravelLeft, 1 + p.sin(partOfPi) * speedMultiplier);
+        this.sound.osc.freq(speed * 15);
         if (travelLeft > 0) this.y += speed;
         else if (travelLeft < 0) this.y -= speed;
         else {
+            this.sound.osc.amp(0, 0.02);
             this.state = this.STATE_OPENING;
             this.removeCurrentFloorFromDest();
         }

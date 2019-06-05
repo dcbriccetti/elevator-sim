@@ -18,6 +18,7 @@ new p5(p => {
             elevSpeed: 3,
             view: 0,
             passengerLoad: 0,
+            volume: 0,
         };
     }
 
@@ -36,6 +37,15 @@ new p5(p => {
         const elevSpeed = p.select('#elevSpeed');
         elevSpeed.value(settings.elevSpeed);
         elevSpeed.changed(() => settings.elevSpeed = elevSpeed.value());
+
+        const volume = p.select('#volume');
+        volume.value(settings.volume);
+        volume.changed(() => {
+            if (p.getAudioContext().state !== 'running') {  // todo Is this required?
+              p.getAudioContext().resume();
+            }
+            settings.volume = volume.value()
+        });
 
         const projection = p.createSelect(); // Using select resulted in a p5 error
         ['Perspective', 'Orthographic'].forEach(p => projection.option(p));
