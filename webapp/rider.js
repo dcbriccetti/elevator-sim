@@ -22,7 +22,7 @@ export default class Rider {
         this.state = this.STATE_ARRIVING;
         this.carIn = undefined;
         this.color = [p.random(255), p.random(255), p.random(255)];
-        this.movementPerUpdate = p.constrain(p.randomGaussian(10, 5), 8, 20);
+        this.movementPerMs = p.randomGaussian(300, 50) / 1000;
         this.destNumberDisplay = this.setUpDestNumberDisplay(p);
     }
 
@@ -58,7 +58,7 @@ export default class Rider {
 
     arrive() {
         const distToWaitPos = this.moveToward(this.waitPos);
-        if (distToWaitPos < this.movementPerUpdate) {
+        if (distToWaitPos === 0) {
             this.state = this.STATE_WAITING;
         }
     }
@@ -73,6 +73,7 @@ export default class Rider {
             const insideCar = p.createVector(openCar.carCenterX() + this.fuzz(cd.x * 0.4), this.pos.y,
                 openCar.settings.geom.carCenterZ + this.fuzz(cd.z * 0.4));
             this.boardingPath = [outsideDoor, insideCar];
+            this.millisAtLastMove = p.millis();
             this.state = this.STATE_BOARDING;
         }
     }
@@ -92,6 +93,7 @@ export default class Rider {
             const exitPoint = p.createVector(p.width / 2 - this.randomDirection() * p.width / 2,
                 this.pos.y, this.randomFloorZ());
             this.exitingPath = [nearDoorInsideCar, outsideDoor, exitPoint];
+            this.millisAtLastMove = p.millis();
             this.state = this.STATE_EXITING;
         }
     }
@@ -103,7 +105,7 @@ export default class Rider {
     followPath(path, nextState) {
         const dest = path[0];
         const distToDest = this.moveToward(dest);
-        if (distToDest <= this.movementPerUpdate) {
+        if (distToDest === 0) {
             path.shift();
             if (path.length === 0) {
                 this.state = nextState;
@@ -112,11 +114,14 @@ export default class Rider {
     }
 
     moveToward(dest) {
+        const now = this.p.millis();
+        const millisSinceLastStep = now - (this.millisAtLastMove || now);
+        this.millisAtLastMove = now;
         const pointerToDest = p5.Vector.sub(dest, this.pos);
         const distToDest = pointerToDest.mag();
-        const step = p5.Vector.mult(pointerToDest.normalize(), Math.min(distToDest, this.movementPerUpdate));
+        const step = p5.Vector.mult(pointerToDest.normalize(), Math.min(distToDest, this.movementPerMs * millisSinceLastStep));
         this.pos.add(step);
-        return distToDest;
+        return p5.Vector.sub(dest, this.pos).mag();
     }
 
     draw() {

@@ -47,17 +47,17 @@ new p5(p => {
             settings.volume = volume.value()
         });
 
-        const projection = p.createSelect(); // Using select resulted in a p5 error
+        const projection = p.createSelect();
         ['Perspective', 'Orthographic'].forEach(p => projection.option(p));
         projection.parent('#projectionParent');
         projection.changed(() => settings.projectionType = projection.elt.selectedIndex);
 
-        const view = p.createSelect(); // Using select resulted in a p5 error
+        const view = p.createSelect();
         ['Front', 'Side', 'Use Mouse'].forEach(v => view.option(v));
         view.parent('#viewParent');
         view.changed(() => settings.view = view.elt.selectedIndex);
 
-        const passengerLoad = p.createSelect(); // Using select resulted in a p5 error
+        const passengerLoad = p.createSelect();
         passengerLoadTypes.forEach(o => passengerLoad.option(o));
         passengerLoad.parent('#passengerLoadParent');
         passengerLoad.changed(() => settings.passengerLoad = passengerLoad.elt.selectedIndex);
@@ -97,6 +97,7 @@ new p5(p => {
     }
 
     p.draw = function () {
+        if (p.frameCount % 30 === 0) document.getElementById('frameRate').textContent = Math.round(p.frameRate());
         p.background(240);
         if (settings.projectionType === 1) {
             p.ortho();

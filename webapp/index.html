@@ -27,6 +27,9 @@
         input, select {
             font-size: 70%;
         }
+        td {
+            vertical-align: top;
+        }
         #nomodules {
             display: none;
         }
@@ -81,6 +84,12 @@
                 </td>
                 <td>
                     <input id="volume" type="range" min="0" max="10" step="1">
+                </td>
+                <td>
+                    <label for="frameRate" class="label">Frame Rate</label>
+                </td>
+                <td>
+                    <span id="frameRate" class="label"></span>
                 </td>
             </tr>
         </table>
