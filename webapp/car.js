@@ -12,7 +12,7 @@ export default class Car {
         this.STATE_CLOSING = 5;
         const gc = settings.geom.car;
         this.doorDims = p.createVector(gc.x / 4, gc.y, 5);
-        this.OPEN_MILLIS = 1500;
+        this.OPEN_MILLIS = 2500;
         const interCarSpacing = gc.x;
         this.CAR_HORZ_SPACING = gc.x + interCarSpacing;
         const carsGroupWidth = settings.numCars * gc.x + (settings.numCars - 1) * interCarSpacing;
@@ -23,7 +23,8 @@ export default class Car {
         this.movingUp = true;
         this.doorOpen = 0;  // 0…1 = closed…open
         this.destFloors = [];
-        this.sound = new MotorSound(settings.numCars === 1 ? 0 : p.map(carNumber, 1, settings.numCars, -0.8, 0.8));
+        this.pan = settings.numCars === 1 ? 0 : p.map(carNumber, 1, settings.numCars, -0.8, 0.8);
+        this.sound = new MotorSound(this.pan);
     }
 
     draw() {
@@ -195,6 +196,10 @@ export default class Car {
             this.sound.osc.amp(0, 0.02);
             this.state = this.STATE_OPENING;
             this.removeCurrentFloorFromDest();
+            if (this.settings.volume > 0) {
+                p.dingSound.pan(this.pan);
+                p.dingSound.play();
+            }
         }
     }
 

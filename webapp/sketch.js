@@ -44,7 +44,8 @@ new p5(p => {
             if (p.getAudioContext().state !== 'running') {  // todo Is this required?
               p.getAudioContext().resume();
             }
-            settings.volume = volume.value()
+            settings.volume = volume.value();
+            p.dingSound.setVolume(volume.value() / 50);  // It’s much louder than the motors
         });
 
         const projection = p.createSelect();
@@ -62,6 +63,10 @@ new p5(p => {
         passengerLoad.parent('#passengerLoadParent');
         passengerLoad.changed(() => settings.passengerLoad = passengerLoad.elt.selectedIndex);
     }
+
+    p.preload = function() {
+        p.dingSound = p.loadSound('assets/ding.wav');
+    };
 
     p.setup = function() {
         const gc = settings.geom.canvas;
@@ -121,12 +126,32 @@ new p5(p => {
         p.noStroke();
         p.fill(0, 0, 100, 20);
         for (let floor = 1; floor <= p.numFloors; ++floor) {
+            const floorY = p.yFromFloor(floor);
             p.pushed(() => {
                 const floorHeight = 4;
-                p.translate(p.width / 2, p.yFromFloor(floor) - floorHeight / 2,
+                p.translate(p.width / 2, floorY - floorHeight / 2,
                     floor === 1 ? -settings.geom.floorDepthOthers / 2 : 0);
                 p.box(p.width, floorHeight,
                     floor === 1 ? settings.geom.floorDepthGround : settings.geom.floorDepthOthers);
+            });
+            cars.forEach(car => {
+                p.pushed(() => {
+                    const gc = settings.geom.car;
+                    const indHeight = gc.y / 3;
+                    p.translate(car.carCenterX(), floorY + gc.y + indHeight / 2,
+                        settings.geom.carCenterZ + gc.z / 2);
+                    p.noStroke();
+                    const carReady = floorY === car.y && (car.state === car.STATE_OPENING || car.state === car.STATE_OPEN);
+                    p.fill(255, 128);
+                    p.plane(gc.x, indHeight);
+                    if (carReady) {
+                        const downArrow = (! car.movingUp && floor !== 1) || floor === p.numFloors;
+                        p.fill('green');
+                        downArrow ?
+                            p.triangle(0, -4, -4,  5, 4,  5) :
+                            p.triangle(0,  5, -4, -4, 4, -4);
+                    }
+                });
             });
         }
     }
