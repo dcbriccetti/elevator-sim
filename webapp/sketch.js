@@ -102,7 +102,10 @@ new p5(p => {
     }
 
     p.draw = function () {
-        if (p.frameCount % 30 === 0) document.getElementById('frameRate').textContent = Math.round(p.frameRate());
+        const inCar = 5;
+        const waiting = 7;
+        const served = dispatcher.riders.length;
+        if (p.frameCount % 30 === 0) document.getElementById('riderCounts').textContent = `In Car: ${inCar}, Waiting: ${waiting}, Served: ${served}`;
         p.background(240);
         if (settings.projectionType === 1) {
             p.ortho();
