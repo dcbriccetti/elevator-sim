@@ -142,10 +142,12 @@ new p5(p => {
                         settings.geom.carCenterZ + gc.z / 2);
                     p.noStroke();
                     const carReady = floorY === car.y && (car.state === car.STATE_OPENING || car.state === car.STATE_OPEN);
-                    p.fill(255, 128);
-                    p.plane(gc.x, indHeight);
                     if (carReady) {
+                        p.stroke(125, 84);
+                        p.fill(255, 248);
+                        p.plane(14, indHeight);
                         const downArrow = (! car.movingUp && floor !== 1) || floor === p.numFloors;
+                        p.noStroke();
                         p.fill('green');
                         downArrow ?
                             p.triangle(0, -4, -4,  5, 4,  5) :
