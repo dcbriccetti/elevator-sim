@@ -1,9 +1,10 @@
 export default class Rider {
-    constructor(p, startFloor, destFloor, cars) {
+    constructor(p, startFloor, destFloor, cars, stats) {
         this.p = p;
         this.startFloor = startFloor;
         this.destFloor = destFloor;
         this.cars = cars;
+        this.stats = stats;
         this.carDims = cars[0].settings.geom.car;
         console.log(`Rider on ${startFloor} going to ${destFloor}`);
         this.STATE_ARRIVING = 1;
@@ -24,6 +25,7 @@ export default class Rider {
         this.color = [p.random(255), p.random(255), p.random(255)];
         this.movementPerMs = p.randomGaussian(300, 50) / 1000;
         this.destNumberDisplay = this.setUpDestNumberDisplay(p);
+        ++this.stats.riders.waiting;
     }
 
     randomDirection() {
@@ -45,7 +47,10 @@ export default class Rider {
                 this.waitForCar(p);
                 break;
             case this.STATE_BOARDING:
-                this.followPath(this.boardingPath, this.STATE_RIDING);
+                this.followPath(this.boardingPath, this.STATE_RIDING, () => {
+                    --this.stats.riders.waiting;
+                    ++this.stats.riders.riding;
+                });
                 break;
             case this.STATE_RIDING:
                 this.ride(p);
@@ -94,6 +99,8 @@ export default class Rider {
                 this.pos.y, this.randomFloorZ());
             this.exitingPath = [nearDoorInsideCar, outsideDoor, exitPoint];
             this.millisAtLastMove = p.millis();
+            --this.stats.riders.riding;
+            ++this.stats.riders.served;
             this.state = this.STATE_EXITING;
         }
     }
@@ -102,13 +109,14 @@ export default class Rider {
         return this.p.map(this.p.random(1), 0, 1, -half, half);
     }
 
-    followPath(path, nextState) {
+    followPath(path, nextState, onComplete = undefined) {
         const dest = path[0];
         const distToDest = this.moveToward(dest);
         if (distToDest === 0) {
             path.shift();
             if (path.length === 0) {
                 this.state = nextState;
+                if (onComplete) onComplete();
             }
         }
     }

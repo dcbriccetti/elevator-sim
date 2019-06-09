@@ -1,5 +1,6 @@
 import Dispatcher from './dispatcher.js'
 import Car from './car.js'
+import Stats from './stats.js'
 
 new p5(p => {
     function createSettings() {
@@ -31,7 +32,8 @@ new p5(p => {
         return settings.geom.storyHeight * (floor - 1);
     };
     const cars = Array.from(Array(settings.numCars).keys(), n => new Car(p, settings, n + 1));
-    const dispatcher = new Dispatcher(p, settings, cars);
+    const stats = new Stats();
+    const dispatcher = new Dispatcher(p, settings, cars, stats);
 
     function createKnobs() {
         const elevSpeed = p.select('#elevSpeed');
@@ -102,10 +104,13 @@ new p5(p => {
     }
 
     p.draw = function () {
-        const inCar = 5;
-        const waiting = 7;
-        const served = dispatcher.riders.length;
-        if (p.frameCount % 30 === 0) document.getElementById('riderCounts').textContent = `In Car: ${inCar}, Waiting: ${waiting}, Served: ${served}`;
+        let lastRiderStats = undefined;
+        const s = stats.riders;
+        if (s !== lastRiderStats) {
+            lastRiderStats = s;
+            const l = s => s.toLocaleString();
+            document.getElementById('riderCounts').textContent = `Waiting: ${l(s.waiting)}, Riding: ${l(s.riding)}, Served: ${l(s.served)}`;
+        }
         p.background(240);
         if (settings.projectionType === 1) {
             p.ortho();

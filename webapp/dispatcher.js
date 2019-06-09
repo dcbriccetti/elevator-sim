@@ -2,10 +2,11 @@ import Rider from './rider.js'
 
 /** Implements a simplistic first-come, first-served passenger delivery scheme. */
 export default class Dispatcher {
-    constructor(p, settings, cars) {
+    constructor(p, settings, cars, stats) {
         this.p = p;
         this.settings = settings;
         this.cars = cars;
+        this.stats = stats;
         this.queue = [];
         this.riders = [];
     }
@@ -60,7 +61,7 @@ export default class Dispatcher {
             while (start === end) {
                 end = randomFloor();
             }
-            this.riders.push(new Rider(p, start, end, this.cars));
+            this.riders.push(new Rider(p, start, end, this.cars, this.stats));
             this.call(start);
         }
     }
