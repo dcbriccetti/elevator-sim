@@ -16,7 +16,7 @@ new p5(p => {
                 floorDepthGround: floorDepthOthers * 2,
                 floorDepthOthers: floorDepthOthers,
             },
-            elevSpeed: 3,
+            elevSpeed: 5,
             view: 0,
             passengerLoad: 0,
             volume: 0,
@@ -47,7 +47,7 @@ new p5(p => {
               p.getAudioContext().resume();
             }
             settings.volume = volume.value();
-            p.dingSound.setVolume(volume.value() / 50);  // It’s much louder than the motors
+            p.dingSound.setVolume(volume.value() / 500);  // It’s much louder than the motors
         });
 
         const projection = p.createSelect();

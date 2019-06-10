@@ -6,7 +6,6 @@ export default class Rider {
         this.cars = cars;
         this.stats = stats;
         this.carDims = cars[0].settings.geom.car;
-        console.log(`Rider on ${startFloor} going to ${destFloor}`);
         this.STATE_ARRIVING = 1;
         this.STATE_WAITING = 2;
         this.STATE_BOARDING = 3;

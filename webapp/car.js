@@ -175,24 +175,41 @@ export default class Car {
             this.state = this.STATE_MOVING;
             this.sound.osc.amp(p.map(this.settings.volume, 0, 10, 0, 0.3), 0.02);
             console.log(`Car ${this.carNumber} moving to ${this.destFloors}`);
+            this.lastMoveTime = p.millis() / 1000;
+            this.speed = 0;
+            this.maxMaxSpeed = 1000;
+            this.maxSpeed = p.map(this.settings.elevSpeed, 1, 10, 20, this.maxMaxSpeed);
+            this.accel = this.maxSpeed * 2; // Should reach max speed in 1/2 second
             this.startY = this.y;
             this.endY = p.yFromFloor(nextDest);
-            this.travelDist = Math.abs(this.endY - this.startY);
+            this.absTrip = Math.abs(this.startY - this.endY);
+            this.accelDistance = Math.min(this.absTrip / 2,
+                (this.maxSpeed * this.maxSpeed) / (2 * this.accel));
         }
     }
 
     move(p) {
-        const absTraveled = Math.abs(this.startY - this.y);
-        const travelPart = Math.abs(absTraveled / this.travelDist);
-        const travelLeft = this.endY - this.y;
-        const absTravelLeft = Math.abs(travelLeft);
-        const partOfPi = p.map(travelPart, 0, 1, 0, p.PI);
-        const speedMultiplier = this.settings.elevSpeed * 5;
-        const speed = Math.min(absTravelLeft, 1 + p.sin(partOfPi) * speedMultiplier);
-        this.sound.osc.freq(speed * 15);
-        if (travelLeft > 0) this.y += speed;
-        else if (travelLeft < 0) this.y -= speed;
-        else {
+        const absTraveled = Math.abs(this.y - this.startY);
+        const absTravelLeft = Math.abs(this.endY - this.y);
+        const now = p.millis() / 1000;
+        const ΔtSinceLastMove = now - this.lastMoveTime;
+        this.lastMoveTime = now;
+        if (absTraveled < this.accelDistance) {
+            if (this.speed < this.maxSpeed) {
+                this.speed = Math.max(1, Math.sqrt(2 * this.accel * absTraveled));
+            }
+        } else if (absTravelLeft < this.accelDistance && this.speed > 0) {
+            this.speed = Math.sqrt(2 * this.accel * absTravelLeft);
+        }
+        this.sound.osc.freq(p.map(this.speed, 0, this.maxMaxSpeed, 40, 100));
+
+        const ΔySinceLastMove = Math.min(absTravelLeft, this.speed * ΔtSinceLastMove);
+        const direction = this.movingUp ? 1 : -1;
+        this.y += direction * ΔySinceLastMove;
+
+        const absTravelLeftAfterMove = Math.abs(this.endY - this.y);
+        if (absTravelLeftAfterMove < 1) {
+            this.y = this.endY;
             this.sound.osc.amp(0, 0.02);
             this.state = this.STATE_OPENING;
             this.removeCurrentFloorFromDest();
