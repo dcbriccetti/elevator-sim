@@ -23,12 +23,9 @@ export default class Dispatcher {
 
         if (floor) {
             const floorY = this.p.yFromFloor(floor);
-            const idleCars = cars.filter(car => car.state === car.STATE_IDLE);
             const dist = car => Math.abs(car.y - floorY);
-            const closestIdle = idleCars.reduce((a, b) => a && b ? dist(a) > dist(b) ? b : a : b, undefined);
-            if (closestIdle) {
-                closestIdle.goTo(floor);
-            }
+            const closestCar = cars.reduce((a, b) => a && b ? dist(a) > dist(b) ? b : a : b, undefined);
+            closestCar.goTo(floor);
         }
     }
 
