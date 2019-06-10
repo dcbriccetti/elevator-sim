@@ -179,7 +179,7 @@ export default class Car {
             this.speed = 0;
             this.maxMaxSpeed = 1000;
             this.maxSpeed = p.map(this.settings.elevSpeed, 1, 10, 20, this.maxMaxSpeed);
-            this.accel = this.maxSpeed * 2; // Should reach max speed in 1/2 second
+            this.accel = this.maxSpeed * 2;
             this.startY = this.y;
             this.endY = p.yFromFloor(nextDest);
             this.absTrip = Math.abs(this.startY - this.endY);
@@ -194,11 +194,9 @@ export default class Car {
         const now = p.millis() / 1000;
         const ΔtSinceLastMove = now - this.lastMoveTime;
         this.lastMoveTime = now;
-        if (absTraveled < this.accelDistance) {
-            if (this.speed < this.maxSpeed) {
-                this.speed = Math.max(1, Math.sqrt(2 * this.accel * absTraveled));
-            }
-        } else if (absTravelLeft < this.accelDistance && this.speed > 0) {
+        if (this.accelerating()) {
+            this.speed = Math.max(1, Math.sqrt(2 * this.accel * absTraveled));
+        } else if (this.decelerating()) {
             this.speed = Math.sqrt(2 * this.accel * absTravelLeft);
         }
         this.sound.osc.freq(p.map(this.speed, 0, this.maxMaxSpeed, 40, 100));
@@ -218,6 +216,14 @@ export default class Car {
                 p.dingSound.play();
             }
         }
+    }
+
+    decelerating() {
+        return Math.abs(this.y - this.endY) < this.accelDistance && this.speed > 0;
+    }
+
+    accelerating() {
+        return Math.abs(this.y - this.startY) < this.accelDistance && this.speed < this.maxSpeed;
     }
 
     removeCurrentFloorFromDest() {
