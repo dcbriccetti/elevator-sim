@@ -5,26 +5,30 @@ export default class Car {
         this.p = p;
         this.settings = settings;
         this.carNumber = carNumber;
+        const gc = settings.geom.car;
+        this.doorDims = p.createVector(gc.x / 4, gc.y, 5);
+        this.doorOpenMs = 2500;
+        const interCarSpacing = gc.x;
+        this.carHorizontalSpacing = gc.x + interCarSpacing;
+        const carsGroupWidth = settings.numCars * gc.x + (settings.numCars - 1) * interCarSpacing;
+        const leftRightMargin = settings.geom.canvas.x - carsGroupWidth;
+        this.carLeftMargin = leftRightMargin / 2;
+        this.y = p.yFromFloor(1);
+        this.goingUp = true;
+        this.doorOpenFraction = 0;  // 0…1 = closed…open
+        this.destFloors = [];
+        this.pan = settings.numCars === 1 ? 0 : p.map(carNumber, 1, settings.numCars, -0.8, 0.8);
+        this.sound = new MotorSound(this.pan);
+        this.createStates();
+        this.state = this.STATE_IDLE;
+    }
+
+    createStates() {
         this.STATE_IDLE = 1;
         this.STATE_MOVING = 2;
         this.STATE_OPENING = 3;
         this.STATE_OPEN = 4;
         this.STATE_CLOSING = 5;
-        const gc = settings.geom.car;
-        this.doorDims = p.createVector(gc.x / 4, gc.y, 5);
-        this.OPEN_MILLIS = 2500;
-        const interCarSpacing = gc.x;
-        this.CAR_HORZ_SPACING = gc.x + interCarSpacing;
-        const carsGroupWidth = settings.numCars * gc.x + (settings.numCars - 1) * interCarSpacing;
-        const leftRightMargin = settings.geom.canvas.x - carsGroupWidth;
-        this.CAR_LEFT_MARGIN = leftRightMargin / 2;
-        this.y = p.yFromFloor(1);
-        this.state = this.STATE_IDLE;
-        this.movingUp = true;
-        this.doorOpen = 0;  // 0…1 = closed…open
-        this.destFloors = [];
-        this.pan = settings.numCars === 1 ? 0 : p.map(carNumber, 1, settings.numCars, -0.8, 0.8);
-        this.sound = new MotorSound(this.pan);
     }
 
     draw() {
@@ -56,24 +60,24 @@ export default class Car {
         const cg = geom.car;
         const yCarTop = this.y + cg.y;
         const carToCwDist = cg.z * 0.8;
-        const cwDepth = 5;
-        const backOfCar = geom.carCenterZ - cg.z / 2;
-        const cwZ = backOfCar - carToCwDist - cwDepth / 2;
-        const cwY = p.height - this.y;
-        const cwHeight = cg.y / 2;
+        const cWeightDepth = 5;
+        const backOfCarZ = geom.carCenterZ - cg.z / 2;
+        const cWeightZ = backOfCarZ - carToCwDist - cWeightDepth / 2;
+        const cWeightY = p.height - this.y;
+        const cWeightHeight = cg.y / 2;
         const inst = this;
 
         function drawCounterWeight() {
             p.stroke(220);
             p.noFill();
             p.pushed(() => {
-                p.translate(inst.carCenterX(), cwY, cwZ);
-                p.box(cg.x, cwHeight, cwDepth);
+                p.translate(inst.carCenterX(), cWeightY, cWeightZ);
+                p.box(cg.x, cWeightHeight, cWeightDepth);
             });
         }
 
         drawCounterWeight();
-        this.drawCables(p, cwY + cwHeight / 2, p.height, cwZ);
+        this.drawCables(p, cWeightY + cWeightHeight / 2, p.height, cWeightZ);
         this.drawCables(p, yCarTop, p.height, geom.carCenterZ);
     }
 
@@ -103,7 +107,7 @@ export default class Car {
     }
 
     carCenterX() {
-        return this.CAR_LEFT_MARGIN + (this.carNumber - 1) * this.CAR_HORZ_SPACING;
+        return this.carLeftMargin + (this.carNumber - 1) * this.carHorizontalSpacing;
     }
 
     drawDoors() {
@@ -117,7 +121,7 @@ export default class Car {
             const dd = this.doorDims;
             p.translate(0, 0, gc.z / 2 - dd.z);
             const doorTravel = gc.x / 4;
-            const xDoorDisplacement = gc.x / 8 + doorTravel * this.doorOpen;
+            const xDoorDisplacement = gc.x / 8 + doorTravel * this.doorOpenFraction;
 
             [1, -1].forEach(sign => {
                 p.pushed(() => {
@@ -138,43 +142,43 @@ export default class Car {
                 this.move(p);
                 break;
             case this.STATE_OPENING:
-                if (this.doorOpen < 1.0) {
-                    this.doorOpen += 0.05;  // Open doors
+                if (this.doorOpenFraction < 1.0) {
+                    this.doorOpenFraction += 0.05;  // Open doors
                 } else {
                     this.state = this.STATE_OPEN;
                     this.openSince = p.millis();
                 }
                 break;
             case this.STATE_OPEN:
-                const timeToClose = this.openSince + this.OPEN_MILLIS;
+                const timeToClose = this.openSince + this.doorOpenMs;
                 const timeToWait = timeToClose - p.millis();
                 if (timeToWait <= 0) {
                     this.state = this.STATE_CLOSING;
                 }
                 break;
             case this.STATE_CLOSING:
-                if (this.doorOpen > 0) {
-                    this.doorOpen -= 0.05;  // Close doors
+                if (this.doorOpenFraction > 0) {
+                    this.doorOpenFraction -= 0.05;  // Close doors
                 } else {
                     this.state = this.STATE_IDLE;
-                    this.doorOpen = 0;
+                    this.doorOpenFraction = 0;
                 }
                 break;
         }
     }
 
     idle(p) {
-        if (this.destFloors.length > 0) {
+        if (this.destFloors.length) {
             let nextDest = this.destFloors.find(f =>
-                this.movingUp ? p.yFromFloor(f) > this.y : p.yFromFloor(f) < this.y);
+                this.goingUp ? p.yFromFloor(f) > this.y : p.yFromFloor(f) < this.y);
             if (!nextDest) {
-                this.movingUp = !this.movingUp;
+                this.goingUp = !this.goingUp;
                 this.sortDestinations();
                 nextDest = this.destFloors[0];
             }
             this.state = this.STATE_MOVING;
             this.sound.osc.amp(p.map(this.settings.volume, 0, 10, 0, 0.3), 0.02);
-            console.log(`Car ${this.carNumber} moving to ${this.destFloors}`);
+            console.log(`Car ${this.carNumber} moving to ${nextDest} of ${this.destFloors}`);
             this.lastMoveTime = p.millis() / 1000;
             this.speed = 0;
             this.maxMaxSpeed = 1000;
@@ -202,7 +206,7 @@ export default class Car {
         this.sound.osc.freq(p.map(this.speed, 0, this.maxMaxSpeed, 40, 100));
 
         const ΔySinceLastMove = Math.min(absTravelLeft, this.speed * ΔtSinceLastMove);
-        const direction = this.movingUp ? 1 : -1;
+        const direction = this.goingUp ? 1 : -1;
         this.y += direction * ΔySinceLastMove;
 
         const absTravelLeftAfterMove = Math.abs(this.endY - this.y);
@@ -234,11 +238,11 @@ export default class Car {
         if (!this.destFloors.find(f => f === floor)) {
             this.destFloors.push(floor);
             this.sortDestinations();
-            console.log(`Car ${this.carNumber} requested at ${floor}`);
+            console.log(`Car ${this.carNumber} will go to ${floor}`);
         }
     }
 
     sortDestinations() {
-        this.destFloors.sort((a, b) => this.movingUp ? a - b : b - a);
+        this.destFloors.sort((a, b) => this.goingUp ? a - b : b - a);
     }
 }

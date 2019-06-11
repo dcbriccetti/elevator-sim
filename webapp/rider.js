@@ -5,13 +5,9 @@ export default class Rider {
         this.destFloor = destFloor;
         this.cars = cars;
         this.stats = stats;
+        this.createStates();
+        this.state = this.STATE_ARRIVING;
         this.carDims = cars[0].settings.geom.car;
-        this.STATE_ARRIVING = 1;
-        this.STATE_WAITING = 2;
-        this.STATE_BOARDING = 3;
-        this.STATE_RIDING = 4;
-        this.STATE_EXITING = 5;
-        this.STATE_EXITED = 6;
         this.height = p.randomGaussian(this.carDims.y / 2, 4);
         this.width = Math.max(6, p.randomGaussian(this.height / 4, 4));
         const neg1IfComingFromRight = this.randomDirection();
@@ -19,7 +15,7 @@ export default class Rider {
         this.pos = p.createVector(enterX, p.yFromFloor(this.startFloor), this.randomFloorZ());
         const waitX = enterX + neg1IfComingFromRight * p.randomGaussian(p.width / 4, p.width / 10);
         this.waitPos = p.createVector(waitX, this.pos.y, this.pos.z);
-        this.state = this.STATE_ARRIVING;
+        this.arrivingPath = [this.waitPos];
         this.carIn = undefined;
         this.color = [p.random(255), p.random(255), p.random(255)];
         this.movementPerMs = p.randomGaussian(300, 50) / 1000;
@@ -27,23 +23,30 @@ export default class Rider {
         ++this.stats.riders.waiting;
     }
 
+    createStates() {
+        this.STATE_ARRIVING = 1;
+        this.STATE_WAITING  = 2;
+        this.STATE_BOARDING = 3;
+        this.STATE_RIDING   = 4;
+        this.STATE_EXITING  = 5;
+        this.STATE_EXITED   = 6;
+    }
+
     randomDirection() {
         return this.p.random(1) < 0.5 ? -1 : 1;
     }
 
     randomFloorZ() {
-        const p = this.p;
-        return p.map(p.random(1), 0, 1, -20, 20);
+        return this.p.map(this.p.random(1), 0, 1, -20, 20);
     }
 
     update() {
-        const p = this.p;
         switch (this.state) {
             case this.STATE_ARRIVING:
-                this.arrive();
+                this.followPath(this.arrivingPath, this.STATE_WAITING);
                 break;
             case this.STATE_WAITING:
-                this.waitForCar(p);
+                this.waitForCar();
                 break;
             case this.STATE_BOARDING:
                 this.followPath(this.boardingPath, this.STATE_RIDING, () => {
@@ -52,7 +55,7 @@ export default class Rider {
                 });
                 break;
             case this.STATE_RIDING:
-                this.ride(p);
+                this.ride();
                 break;
             case this.STATE_EXITING:
                 this.followPath(this.exitingPath, this.STATE_EXITED);
@@ -60,60 +63,61 @@ export default class Rider {
         }
     }
 
-    arrive() {
-        const distToWaitPos = this.moveToward(this.waitPos);
-        if (distToWaitPos === 0) {
-            this.state = this.STATE_WAITING;
-        }
-    }
-
-    waitForCar(p) {
-        const openCar = this.cars.find(car => car.state === car.STATE_OPEN && car.y === p.yFromFloor(this.startFloor));
+    waitForCar() {
+        const yThisFloor = this.p.yFromFloor(this.startFloor);
+        const openCar = this.cars.find(car => car.state === car.STATE_OPEN && car.y === yThisFloor);
         if (openCar) {
             this.carIn = openCar;
             this.carIn.goTo(this.destFloor);
-            const cd = this.carDims;
-            const outsideDoor = this.outsideDoorPos(p, openCar, cd);
-            const insideCar = p.createVector(openCar.carCenterX() + this.fuzz(cd.x * 0.4), this.pos.y,
-                openCar.settings.geom.carCenterZ + this.fuzz(cd.z * 0.4));
-            this.boardingPath = [outsideDoor, insideCar];
-            this.millisAtLastMove = p.millis();
+            this.setBoardingPath(openCar);
+            this.millisAtLastMove = this.p.millis();
             this.state = this.STATE_BOARDING;
         }
     }
 
-    outsideDoorPos(p, openCar, cd) {
-        return p.createVector(openCar.carCenterX() + this.fuzz(2),
-            this.pos.y, openCar.settings.geom.carCenterZ + cd.z + this.fuzz(2));
+    outsideDoorPos(openCar) {
+        return this.p.createVector(openCar.carCenterX() + this.fuzz(2),
+            this.pos.y, openCar.settings.geom.carCenterZ + this.carDims.z + this.fuzz(2));
     }
 
-    ride(p) {
-        this.pos.y = this.carIn.y;
-        if (this.carIn.state === this.carIn.STATE_OPEN && this.carIn.y === p.yFromFloor(this.destFloor)) {
-            const cd = this.carDims;
-            const nearDoorInsideCar = p.createVector(this.carIn.carCenterX() + this.fuzz(2), this.pos.y,
-                this.carIn.settings.geom.carCenterZ + cd.z / 2 - 5 + this.fuzz(2));
-            const outsideDoor = this.outsideDoorPos(p, this.carIn, this.carDims);
-            const exitPoint = p.createVector(p.width / 2 - this.randomDirection() * p.width / 2,
-                this.pos.y, this.randomFloorZ());
-            this.exitingPath = [nearDoorInsideCar, outsideDoor, exitPoint];
-            this.millisAtLastMove = p.millis();
+    ride() {
+        const car = this.carIn;
+        this.pos.y = car.y;
+        if (car.state === car.STATE_OPEN && car.y === this.p.yFromFloor(this.destFloor)) {
+            this.setExitingPath(car);
+            this.millisAtLastMove = this.p.millis();
             --this.stats.riders.riding;
             ++this.stats.riders.served;
             this.state = this.STATE_EXITING;
         }
     }
 
+    setBoardingPath(car) {
+        const cd = this.carDims;
+        const insideCar = this.p.createVector(car.carCenterX() + this.fuzz(cd.x * 0.4), this.pos.y,
+            car.settings.geom.carCenterZ + this.fuzz(cd.z * 0.4));
+        this.boardingPath = [this.outsideDoorPos(car), insideCar];
+    }
+
+    setExitingPath(car) {
+        const p = this.p;
+        const nearDoorInsideCar = p.createVector(car.carCenterX() + this.fuzz(2), this.pos.y,
+            car.settings.geom.carCenterZ + this.carDims.z / 2 - 5 + this.fuzz(2));
+        const outsideDoor = this.outsideDoorPos(car);
+        const exitPoint = p.createVector(p.width / 2 - this.randomDirection() * p.width / 2,
+            this.pos.y, this.randomFloorZ());
+        this.exitingPath = [nearDoorInsideCar, outsideDoor, exitPoint];
+    }
+
     fuzz(half) {
         return this.p.map(this.p.random(1), 0, 1, -half, half);
     }
 
-    followPath(path, nextState, onComplete = undefined) {
-        const dest = path[0];
-        const distToDest = this.moveToward(dest);
-        if (distToDest === 0) {
+    followPath(path, nextState, onComplete) {
+        const distanceToDestination = this.moveToward(path[0]);
+        if (distanceToDestination === 0) {
             path.shift();
-            if (path.length === 0) {
+            if (! path.length) {
                 this.state = nextState;
                 if (onComplete) onComplete();
             }
@@ -137,7 +141,6 @@ export default class Rider {
         const p = this.p;
         p.pushed(() => {
             p.translate(this.pos.x, this.pos.y, this.pos.z);
-            const alpha = 200;
             p.pushed(() => {
                 const legLength = 4;
                 p.translate(0, this.height / 2 + legLength, 0);

@@ -1,25 +1,25 @@
 import Rider from './rider.js'
 
-/** Implements a simplistic first-come, first-served passenger delivery scheme. */
+/** Manages riders, and calls elevators for them. */
 export default class Dispatcher {
     constructor(p, settings, cars, stats) {
         this.p = p;
         this.settings = settings;
         this.cars = cars;
         this.stats = stats;
-        this.queue = [];
+        this.carCallQueue = [];
         this.riders = [];
     }
 
-    call(floor) {
-        if (! this.queue.find(el => el === floor)) {
-            this.queue.push(floor);
+    requestCar(floor) {
+        if (! this.carCallQueue.find(el => el === floor)) {
+            this.carCallQueue.push(floor);
         }
     }
 
     process(cars) {
         this.processRiders();
-        const floor = this.queue.shift();
+        const floor = this.carCallQueue.shift();
 
         if (floor) {
             const floorY = this.p.yFromFloor(floor);
@@ -59,7 +59,7 @@ export default class Dispatcher {
                 end = randomFloor();
             }
             this.riders.push(new Rider(p, start, end, this.cars, this.stats));
-            this.call(start);
+            this.requestCar(start);
         }
     }
 }
