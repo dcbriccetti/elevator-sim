@@ -24,6 +24,9 @@
             color: black;
             margin-left: 1em;
         }
+        #riderCounts {
+            margin-left: inherit;
+        }
         input, select {
             font-size: 70%;
         }
@@ -55,39 +58,22 @@
     <div id='controls'>
         <table>
             <tr>
-                <td>
-                    <label for="elevSpeed" class="label">Elevator Speed</label>
-                </td>
-                <td>
-                    <input id="elevSpeed" type="range" min="1" max="10" step="1">
-                </td>
-
-                <td>
-                    <label for="projection" class="label">Projection</label>
-                </td>
+                <td><label for="elevSpeed" class="label">Elevator Speed</label></td>
+                <td><input id="elevSpeed" type="range" min="1" max="10" step="1"></td>
+                <td><label for="projection" class="label">Projection</label></td>
                 <td id="projectionParent"></td>
             </tr>
             <tr>
-                <td>
-                    <label for="view" class="label">View</label>
-                </td>
+                <td><label for="view" class="label">View</label></td>
                 <td id="viewParent"></td>
-
-                <td>
-                    <label for="passengerLoad" class="label">Load</label>
-                </td>
+                <td><label for="passengerLoad" class="label">Load</label></td>
                 <td id="passengerLoadParent"></td>
             </tr>
             <tr>
-                <td>
-                    <label for="volume" class="label">Volume</label>
-                </td>
-                <td>
-                    <input id="volume" type="range" min="0" max="10" step="1">
-                </td>
-                <td colspan="2">
-                    <span id="riderCounts" class="label"></span>
-                </td>
+                <td><label for="volume" class="label">Volume</label></td>
+                <td><input id="volume" type="range" min="0" max="10" step="1"></td>
+                <td><label for="riderCounts" class="label">Riders</label></td>
+                <td><span id="riderCounts" class="label"></span></td>
             </tr>
         </table>
     </div>

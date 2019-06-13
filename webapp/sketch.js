@@ -74,8 +74,9 @@ new p5(p => {
     function showRiderStats() {
         const s = stats.riders;
         const l = s => s.toLocaleString();
+        const weight = s.riding ? ` (${l(s.ridingKg / 1000)} Mg)` : '';
         document.getElementById('riderCounts').textContent =
-            `Waiting: ${l(s.waiting)}, Riding: ${l(s.riding)}, Served: ${l(s.served)}`;
+            `Waiting: ${l(s.waiting)}, On: ${l(s.riding)}${weight}, Done: ${l(s.served)}`;
     }
 
     function setUpCamera() {

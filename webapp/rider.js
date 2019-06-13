@@ -10,9 +10,8 @@ export default class Rider {
         this.createStates();
         this.state = this.STATE_ARRIVING;
         this.carGeom = cars[0].settings.geom.car;
-        this.height = p.randomGaussian(this.carGeom.y / 2, 4);
-        this.width = Math.max(6, p.randomGaussian(this.height / 4, 4));
-        const travelDirection = this.p.random([-1, 1]);
+        this.setBodyAttributes();
+        const travelDirection = p.random([-1, 1]);
         const enterX = p.width / 2 - travelDirection * p.width / 2;
         this.pos = p.createVector(enterX, p.yFromFloor(this.startFloor), this.randomFloorZ());
         const waitX = enterX + travelDirection * p.randomGaussian(p.width / 4, p.width / 10);
@@ -33,6 +32,19 @@ export default class Rider {
         this.STATE_EXITED   = 6;
     }
 
+    setBodyAttributes() {
+        const p = this.p;
+        const meanHeight = 1.7;
+        const meanWeight = 85;
+        this.height = p.constrain(p.randomGaussian(meanHeight, 0.5), 0.8, 2.5);
+        this.weight = p.constrain(p.randomGaussian(meanWeight, 10), 30, 150);
+        const bmi = this.weight / (this.height * this.height);
+        const normalBmiDiff = p.constrain(bmi - 25, -10, 10);
+        const widthMultiple = p.map(normalBmiDiff, -10, 10, 0.6, 2.5);
+        const normalWaistDiam = .90 / Math.PI; // d = circumference / π
+        this.width = normalWaistDiam * widthMultiple;
+    }
+
     randomFloorZ() {
         return this.p.lerp(-20, 20, this.p.random(1));
     }
@@ -49,6 +61,7 @@ export default class Rider {
                 this.followPath(this.boardingPath, this.STATE_RIDING, () => {
                     --this.stats.riders.waiting;
                     ++this.stats.riders.riding;
+                    this.stats.riders.ridingKg += this.weight;
                 });
                 break;
             case this.STATE_RIDING:
@@ -84,6 +97,7 @@ export default class Rider {
             this.setExitingPath(car);
             this.millisAtLastMove = this.p.millis();
             --this.stats.riders.riding;
+            this.stats.riders.ridingKg -= this.weight;
             ++this.stats.riders.served;
             this.state = this.STATE_EXITING;
         }
@@ -137,18 +151,22 @@ export default class Rider {
         if (this.state === this.STATE_EXITED) return;
 
         const p = this.p;
+        const scaleMetersTo3dUnits = 16;
+        const s = x => x * scaleMetersTo3dUnits
+        const legLength = s(this.height / 3);
+        const height = s(this.height) - legLength;
+        const width = s(this.width);
         p.pushed(() => {
             p.translate(this.pos.x, this.pos.y, this.pos.z);
             p.pushed(() => {
-                const legLength = 4;
-                p.translate(0, this.height / 2 + legLength, 0);
+                p.translate(0, legLength + height / 2, 0);
                 p.noStroke();
                 p.fill(this.color[0], this.color[1], this.color[2]);
-                p.ellipsoid(this.width / 2, this.height / 2, this.width / 2);
+                p.ellipsoid(width / 2, height / 2, this.width / 2);
             });
 
             p.pushed(() => {
-                p.translate(0, this.height * 1.7, 0);
+                p.translate(0, legLength + height + s(0.5), 0);
                 p.scale(0.5, -0.5, 1);  // Fix upside-down and shrink for better quality
                 p.texture(this.destNumberDisplay);
                 p.noStroke();
