@@ -14,6 +14,7 @@ new p5(p => {
         return {
             numCars: 5,
             geom: {
+                scaleMetersTo3dUnits: 16,  // Some objects are defined with metric dimensions
                 canvas: p.createVector(600, 1000),
                 car: car,
                 carCenterZ: -car.z / 2 - floorDepthOthers / 2,

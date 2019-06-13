@@ -1,7 +1,8 @@
 /** Manages an elevator rider */
 export default class Rider {
-    constructor(p, startFloor, destFloor, cars, stats) {
+    constructor(p, settings, startFloor, destFloor, cars, stats) {
         this.p = p;
+        this.settings = settings;
         this.startFloor = startFloor;
         this.destFloor = destFloor;
         this.cars = cars;
@@ -151,8 +152,7 @@ export default class Rider {
         if (this.state === this.STATE_EXITED) return;
 
         const p = this.p;
-        const scaleMetersTo3dUnits = 16;
-        const s = x => x * scaleMetersTo3dUnits
+        const s = x => x * this.settings.geom.scaleMetersTo3dUnits;
         const legLength = s(this.height / 3);
         const height = s(this.height) - legLength;
         const width = s(this.width);

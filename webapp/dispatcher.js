@@ -64,7 +64,7 @@ export default class Dispatcher {
             while (start === end) {
                 end = randomFloor();
             }
-            this.riders.push(new Rider(p, start, end, this.cars, this.stats));
+            this.riders.push(new Rider(p, this.settings, start, end, this.cars, this.stats));
             this.requestCar(start);
         }
     }
