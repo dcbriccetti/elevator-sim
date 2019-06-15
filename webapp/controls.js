@@ -7,9 +7,14 @@ export default class Controls {
     createKnobs(passengerLoadTypes) {
         const p = this.p;
         const settings = this.settings;
+
         const elevSpeed = p.select('#elevSpeed');
         elevSpeed.value(settings.elevSpeed);
         elevSpeed.changed(() => settings.elevSpeed = elevSpeed.value());
+
+        const numCars = p.select('#numActiveCars');
+        numCars.value(settings.numActiveCars);
+        numCars.changed(() => settings.numActiveCars = numCars.value());
 
         const volume = p.select('#volume');
         volume.value(settings.volume);

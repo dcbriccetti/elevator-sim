@@ -17,20 +17,24 @@ export default class Dispatcher {
         }
     }
 
-    process(cars) {
+    process() {
         this.processRiders();
         const floor = this.carCallQueue.shift();
 
         if (floor) {
             const floorY = this.p.yFromFloor(floor);
-            const idleCars = cars.filter(car => car.state === car.STATE_IDLE);
+            const activeCars = this.cars.slice(0, this.settings.numActiveCars);
+            const idleCars = activeCars.filter(car => car.state === car.STATE_IDLE);
             const dist = car => Math.abs(car.y - floorY);
             const closest = cars => cars.reduce((a, b) => a && b ? dist(a) > dist(b) ? b : a : b, undefined);
-            const closestIdle = closest(idleCars);
-            if (closestIdle) {
-                closestIdle.goTo(floor);
+            const closestIdleActiveCar = closest(idleCars);
+            if (closestIdleActiveCar) {
+                closestIdleActiveCar.goTo(floor);
             } else {
-                closest(cars).goTo(floor);
+                const closestActiveCar = closest(activeCars);
+                if (closestActiveCar)
+                    closestActiveCar.goTo(floor);
+                else this.carCallQueue.push(floor);
             }
         }
     }

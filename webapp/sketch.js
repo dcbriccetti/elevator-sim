@@ -12,7 +12,8 @@ new p5(p => {
         const car = p.createVector(1, 1, 1.5).mult(50);
         const floorDepthOthers = 50;
         return {
-            numCars: 5,
+            numCars: 8,
+            numActiveCars: 0,
             geom: {
                 scaleMetersTo3dUnits: 16,  // Some objects are defined with metric dimensions
                 car: car,
@@ -119,7 +120,7 @@ new p5(p => {
                 car.draw();
             });
             building.drawFloors(p);
-            dispatcher.process(cars);
+            dispatcher.process();
         });
     };
 
