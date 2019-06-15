@@ -33,9 +33,8 @@ new p5(p => {
     const settings = createSettings();
     let mouseHasMoved = false;
 
-    p.yFromFloor = function(floor) {
-        return settings.geom.storyHeight * (floor - 1);
-    };
+    p.yFromFloor = floor => settings.geom.storyHeight * (floor - 1);
+    p.floorFromY = y => Math.round(y / settings.geom.storyHeight + 1);
     let controls;
     let cars;
     let building;
@@ -52,9 +51,9 @@ new p5(p => {
         p.createCanvas(cg.canvas.x, cg.canvas.y, p.WEBGL).parent('main');
         p.numFloors = Math.floor(p.height / settings.geom.storyHeight);
         controls = new Controls(p, settings);
-        cars = Array.from(Array(settings.numCars).keys(), n => new Car(p, settings, n + 1));
-        building = new Building(settings, cars);
         stats = new Stats();
+        cars = Array.from(Array(settings.numCars).keys(), n => new Car(p, settings, stats, n + 1));
+        building = new Building(settings, cars);
         dispatcher = new Dispatcher(p, settings, cars, stats);
         controls.createKnobs(passengerLoadTypes);
     };
@@ -91,10 +90,20 @@ new p5(p => {
     function showRiderStats() {
         const s = stats.riders;
         const l = s => s.toLocaleString();
+        const now = p.millis() / 1000;
+        const waitingRiders = dispatcher.riders.filter(r => r.state === r.STATE_WAITING);
+        const waitSecs = waitingRiders.reduce((accum, rider) => (now - rider.arrivalTime) + accum, 0);
+        const wait = s.waiting ? ` (${l(Math.round(waitSecs))} secs)` : '';
+        const profit = s.payments - stats.costs.operating;
+        $('#score').html(l(Math.round(Math.max(0, profit / (p.millis() / 1000 / 60)))));
+        $('#waiting').html(`${l(s.waiting)}${wait}`);
         const weight = s.riding ? ` (${l(s.ridingKg / 1000)} Mg)` : '';
-        $('#waiting').html(l(s.waiting));
         $('#riding').html(`${l(s.riding)}${weight}`);
         $('#served').html(l(s.served));
+        const curStyle = {style: 'currency', currency: 'usd'};
+        $('#payments').html(s.payments.toLocaleString('en-us', curStyle));
+        $('#costs').html(stats.costs.operating.toLocaleString('en-us', curStyle));
+        $('#profit').html((profit).toLocaleString('en-us', curStyle));
     }
 
     function setUpCamera() {
@@ -109,7 +118,13 @@ new p5(p => {
         }
     }
 
+    let lastDrawTimeSecs = p.millis() / 1000;
+
     p.draw = function () {
+        const now = (p.millis() / 1000);
+        const timeSinceLastDrawSecs = now - lastDrawTimeSecs;
+        lastDrawTimeSecs = now;
+        stats.addIdleCosts(timeSinceLastDrawSecs, settings.numActiveCars);
         showRiderStats();
         p.background(240);
         setUpCamera();

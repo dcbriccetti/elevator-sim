@@ -10,6 +10,7 @@ export default class Rider {
 
         this.createStates();
         this.state = this.STATE_ARRIVING;
+        this.arrivalTime = p.millis() / 1000;
         this.carGeom = settings.geom.car;
         this.setBodyAttributes();
         const travelDirection = p.random([-1, 1]);
@@ -51,6 +52,7 @@ export default class Rider {
     }
 
     update() {
+        const p = this.p;
         switch (this.state) {
             case this.STATE_ARRIVING:
                 this.followPath(this.arrivingPath, this.STATE_WAITING);
@@ -69,7 +71,13 @@ export default class Rider {
                 this.ride();
                 break;
             case this.STATE_EXITING:
-                this.followPath(this.exitingPath, this.STATE_EXITED);
+                this.followPath(this.exitingPath, this.STATE_EXITED, () => {
+                    const tripTime = p.millis() / 1000 - this.arrivalTime;
+                    const penaltyTime = p.constrain(tripTime - 30, 0, 300);
+                    const normalCost = 0.25;
+                    const rideCost = normalCost - p.map(penaltyTime, 0, 300, 0, normalCost);
+                    this.stats.riders.payments += rideCost;
+                });
                 break;
         }
     }
