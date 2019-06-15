@@ -10,18 +10,18 @@ export default class Rider {
 
         this.createStates();
         this.state = this.STATE_ARRIVING;
-        this.carGeom = cars[0].settings.geom.car;
+        this.carGeom = settings.geom.car;
         this.setBodyAttributes();
         const travelDirection = p.random([-1, 1]);
         const enterX = p.width / 2 - travelDirection * p.width / 2;
-        this.pos = p.createVector(enterX, p.yFromFloor(this.startFloor), this.randomFloorZ());
+        this.pos = p.createVector(enterX, p.yFromFloor(startFloor), this.randomFloorZ());
         const waitX = enterX + travelDirection * p.randomGaussian(p.width / 4, p.width / 10);
         this.arrivingPath = [p.createVector(waitX, this.pos.y, this.pos.z)];
         this.carIn = undefined;
         this.color = [p.random(255), p.random(255), p.random(255)];
         this.movementPerMs = p.randomGaussian(300, 50) / 1000;
         this.destNumberDisplay = this.setUpDestNumberDisplay(p);
-        ++this.stats.riders.waiting;
+        ++stats.riders.waiting;
     }
 
     createStates() {
