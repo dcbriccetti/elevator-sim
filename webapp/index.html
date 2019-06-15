@@ -19,13 +19,15 @@
             font-family: sans-serif;
         }
 
-        .label {
+        .label, .hud-text {
             font-size: 70%;
             color: black;
             margin-left: 1em;
+            margin-right: 1em;
         }
-        #riderCounts {
-            margin-left: inherit;
+
+        .hud-text {
+            vertical-align: middle;
         }
         input, select {
             font-size: 70%;
@@ -37,10 +39,7 @@
             display: none;
         }
         #controls {
-            position: absolute;
             background-color: rgba(255, 255, 255, 0.3);
-            margin: .3em;
-            padding: .2em;
         }
     </style>
 </head>
@@ -52,30 +51,49 @@
 <script nomodule>
     document.getElementById('nomodules').style.display = 'block';
 </script>
-<div class="container" id="main">
-<h1>Elevator Simulator</h1>
-    <p style="font-size: 70%">By <a href="https://davebsoft.com">Dave Briccetti</a><a style="margin-left: 1em" href="https://github.com/dcbriccetti/elevator-sim">Source code</a><a style="margin-left: 1em" href="https://youtu.be/Ph4IhXUZy20">Code explanation video</a></p>
-    <div id='controls'>
-        <table>
-            <tr>
-                <td><label for="elevSpeed" class="label">Elevator Speed</label></td>
-                <td><input id="elevSpeed" type="range" min="1" max="10" step="1"></td>
-                <td><label for="projection" class="label">Projection</label></td>
-                <td id="projectionParent"></td>
-            </tr>
-            <tr>
-                <td><label for="view" class="label">View</label></td>
-                <td id="viewParent"></td>
-                <td><label for="passengerLoad" class="label">Load</label></td>
-                <td id="passengerLoadParent"></td>
-            </tr>
-            <tr>
-                <td><label for="volume" class="label">Volume</label></td>
-                <td><input id="volume" type="range" min="0" max="10" step="1"></td>
-                <td><label for="riderCounts" class="label">Riders</label></td>
-                <td><span id="riderCounts" class="label"></span></td>
-            </tr>
-        </table>
+<div class="container-fluid">
+<p><b>Elevator Simulator</b>
+    <span style="font-size: 70%">By <a href="https://davebsoft.com">Dave Briccetti</a><a style="margin-left: 1em" href="https://github.com/dcbriccetti/elevator-sim">Source code</a><a style="margin-left: 1em" href="https://youtu.be/Ph4IhXUZy20">Code explanation video</a></span></p>
+    <div class='row'>
+        <div class='col-3'>
+            <div id='controls'>
+                <table>
+                    <tr>
+                        <td><label for="waiting" class="label">Waiting</label></td>
+                        <td id="waiting" class='hud-text'></td>
+                    </tr>
+                    <tr>
+                        <td><label for="riding" class="label">Riding</label></td>
+                        <td id="riding" class='hud-text'></td>
+                    </tr>
+                    <tr>
+                        <td><label for="served" class="label">Served</label></td>
+                        <td id="served" class='hud-text'></td>
+                    </tr>
+                    <tr>
+                        <td><label for="elevSpeed" class="label">Elevator Speed</label></td>
+                        <td><input id="elevSpeed" type="range" min="1" max="10" step="1"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="projection" class="label">Projection</label></td>
+                        <td id="projectionParent"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="view" class="label">View</label></td>
+                        <td id="viewParent"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="passengerLoad" class="label">Load</label></td>
+                        <td id="passengerLoadParent"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="volume" class="label">Volume</label></td>
+                        <td><input id="volume" type="range" min="0" max="10" step="1"></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class='col' id='main'></div>
     </div>
 </div>
 </body>

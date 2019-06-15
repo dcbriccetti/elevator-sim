@@ -15,7 +15,6 @@ new p5(p => {
             numCars: 5,
             geom: {
                 scaleMetersTo3dUnits: 16,  // Some objects are defined with metric dimensions
-                canvas: p.createVector(600, 1000),
                 car: car,
                 carCenterZ: -car.z / 2 - floorDepthOthers / 2,
                 storyHeight: car.y * 1.7,
@@ -36,21 +35,37 @@ new p5(p => {
     p.yFromFloor = function(floor) {
         return settings.geom.storyHeight * (floor - 1);
     };
-    const controls = new Controls(p, settings);
-    const cars = Array.from(Array(settings.numCars).keys(), n => new Car(p, settings, n + 1));
-    const building = new Building(settings, cars);
-    const stats = new Stats();
-    const dispatcher = new Dispatcher(p, settings, cars, stats);
+    let controls;
+    let cars;
+    let building;
+    let stats;
+    let dispatcher;
 
     p.preload = function() {
         p.dingSound = p.loadSound('assets/ding.wav');
     };
 
     p.setup = function() {
-        const gc = settings.geom.canvas;
-        p.createCanvas(gc.x, gc.y, p.WEBGL).parent('main');
+        const cg = settings.geom;
+        setCanvasSize();
+        p.createCanvas(cg.canvas.x, cg.canvas.y, p.WEBGL).parent('main');
         p.numFloors = Math.floor(p.height / settings.geom.storyHeight);
+        controls = new Controls(p, settings);
+        cars = Array.from(Array(settings.numCars).keys(), n => new Car(p, settings, n + 1));
+        building = new Building(settings, cars);
+        stats = new Stats();
+        dispatcher = new Dispatcher(p, settings, cars, stats);
         controls.createKnobs(passengerLoadTypes);
+    };
+
+    function setCanvasSize() {
+        const m = $('#main');
+        settings.geom.canvas = p.createVector(m.width() * 0.95, p.windowHeight * 0.92);  // todo Remove these magic numbers
+    }
+
+    p.windowResized = function() {
+        setCanvasSize();
+        p.resizeCanvas(settings.geom.canvas.x, settings.geom.canvas.y);
     };
 
     p.mouseMoved = function() {
@@ -76,8 +91,9 @@ new p5(p => {
         const s = stats.riders;
         const l = s => s.toLocaleString();
         const weight = s.riding ? ` (${l(s.ridingKg / 1000)} Mg)` : '';
-        document.getElementById('riderCounts').textContent =
-            `Waiting: ${l(s.waiting)}, On: ${l(s.riding)}${weight}, Done: ${l(s.served)}`;
+        $('#waiting').html(l(s.waiting));
+        $('#riding').html(`${l(s.riding)}${weight}`);
+        $('#served').html(l(s.served));
     }
 
     function setUpCamera() {
