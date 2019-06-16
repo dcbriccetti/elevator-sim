@@ -61,11 +61,16 @@ export default class Rider {
                 this.waitForCar();
                 break;
             case this.STATE_BOARDING:
-                this.followPath(this.boardingPath, this.STATE_RIDING, () => {
+                const canceled = this.followPath(this.boardingPath, this.STATE_RIDING, () => {
                     --this.stats.riders.waiting;
                     ++this.stats.riders.riding;
                     this.stats.riders.ridingKg += this.weight;
-                });
+                }, () => this.carIn.state === this.carIn.STATE_OPEN);
+                if (canceled) {
+                    this.carIn.removeRider(this);
+                    this.carIn = undefined;
+                    this.state = this.STATE_WAITING;
+                }
                 break;
             case this.STATE_RIDING:
                 this.ride();
@@ -133,7 +138,8 @@ export default class Rider {
         return this.p.map(this.p.random(1), 0, 1, -half, half);
     }
 
-    followPath(path, nextState, onComplete) {
+    followPath(path, nextState, onComplete, continueWhile) {
+        if (continueWhile && ! continueWhile()) return true;
         const distanceToDestination = this.moveToward(path[0]);
         if (distanceToDestination === 0) {
             path.shift();
