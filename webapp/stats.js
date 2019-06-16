@@ -1,5 +1,6 @@
 export default class Stats {
     constructor() {
+        this.normalRideCost = 0.25;
         this.riders = {
             riding: 0,
             ridingKg: 0,
@@ -12,7 +13,22 @@ export default class Stats {
             perSecPerCar: 0.01,
             perFloor: 0.1,
             operating: 0
+        };
+        this.maxRecentRiderPayments = 150;
+        this.recentRiderPayments = [];
+        this.recentTripTimes = [];
+    }
+
+    chargeRider(p, tripTime) {
+        const penaltyTime = p.constrain(tripTime - 30, 0, 300);
+        const rideCost = this.normalRideCost - p.map(penaltyTime, 0, 300, 0, this.normalRideCost);
+        this.recentRiderPayments.push(rideCost);
+        this.recentTripTimes.push(tripTime);
+        if (this.recentRiderPayments.length > this.maxRecentRiderPayments) {
+            this.recentRiderPayments.shift();
+            this.recentTripTimes.shift();
         }
+        this.riders.payments += rideCost;
     }
 
     addMovementCosts(numFloors, speed) {

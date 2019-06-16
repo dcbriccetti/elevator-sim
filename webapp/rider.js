@@ -73,10 +73,7 @@ export default class Rider {
             case this.STATE_EXITING:
                 this.followPath(this.exitingPath, this.STATE_EXITED, () => {
                     const tripTime = p.millis() / 1000 - this.arrivalTime;
-                    const penaltyTime = p.constrain(tripTime - 30, 0, 300);
-                    const normalCost = 0.25;
-                    const rideCost = normalCost - p.map(penaltyTime, 0, 300, 0, normalCost);
-                    this.stats.riders.payments += rideCost;
+                    this.stats.chargeRider(p, tripTime);
                 });
                 break;
         }

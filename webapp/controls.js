@@ -1,7 +1,8 @@
 export default class Controls {
-    constructor(p, settings) {
+    constructor(p, settings, stats) {
         this.p = p;
         this.settings = settings;
+        this.stats = stats;
     }
 
     createKnobs(passengerLoadTypes) {
@@ -40,5 +41,9 @@ export default class Controls {
         passengerLoadTypes.forEach(o => passengerLoad.option(o));
         passengerLoad.parent('#passengerLoadParent');
         passengerLoad.changed(() => settings.passengerLoad = passengerLoad.elt.selectedIndex);
+
+        this.paymentsChart = p.createGraphics(this.stats.maxRecentRiderPayments,
+            15).parent('#paymentsChart');
+        $('#paymentsChart canvas').show();
     }
 }

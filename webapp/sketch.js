@@ -50,8 +50,8 @@ new p5(p => {
         setCanvasSize();
         p.createCanvas(cg.canvas.x, cg.canvas.y, p.WEBGL).parent('main');
         p.numFloors = Math.floor(p.height / settings.geom.storyHeight);
-        controls = new Controls(p, settings);
         stats = new Stats();
+        controls = new Controls(p, settings, stats);
         cars = Array.from(Array(settings.numCars).keys(), n => new Car(p, settings, stats, n + 1));
         building = new Building(settings, cars);
         dispatcher = new Dispatcher(p, settings, cars, stats);
@@ -104,6 +104,15 @@ new p5(p => {
         $('#payments').html(s.payments.toLocaleString('en-us', curStyle));
         $('#costs').html(stats.costs.operating.toLocaleString('en-us', curStyle));
         $('#profit').html((profit).toLocaleString('en-us', curStyle));
+        const g = controls.paymentsChart;
+        const yScale = g.height / stats.normalRideCost;
+        stats.recentRiderPayments.forEach((a, i) => {
+            const rideCost = a * yScale;
+            g.stroke('white');
+            g.line(i, 0, i, g.height);
+            g.stroke('gray');
+            g.line(i, g.height - rideCost, i, g.height);
+        });
     }
 
     function setUpCamera() {
