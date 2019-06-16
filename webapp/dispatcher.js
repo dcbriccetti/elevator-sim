@@ -56,6 +56,14 @@ export default class Dispatcher {
         return this.cachedActiveCars;
     }
 
+    isActive(car) {
+        return this.activeCars().find(c => c === car) !== undefined;
+    }
+
+    updateCarActiveStatuses() {
+        this.cars.forEach(car => car.active = this.isActive(car))
+    }
+
     processRiders() {
         this.riders.forEach(rider => {
             rider.update();

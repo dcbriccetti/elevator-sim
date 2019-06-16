@@ -3,6 +3,7 @@ export default class Controls {
         this.p = p;
         this.settings = settings;
         this.stats = stats;
+        this.activeCarsChange = () => {};
     }
 
     createKnobs(passengerLoadTypes) {
@@ -15,7 +16,10 @@ export default class Controls {
 
         const numCars = p.select('#numActiveCars');
         numCars.value(settings.numActiveCars);
-        numCars.changed(() => settings.numActiveCars = numCars.value());
+        numCars.changed(() => {
+            settings.numActiveCars = numCars.value();
+            this.activeCarsChange();
+        });
 
         const volume = p.select('#volume');
         volume.value(settings.volume);

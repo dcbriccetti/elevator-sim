@@ -9,7 +9,7 @@ new p5(p => {
         ['Varying', 'Very Light', 'Light', 'Moderate', 'Heavy', 'Very Heavy', 'Insane'];
 
     function createSettings() {
-        const car = p.createVector(1, 1, 1.5).mult(50);
+        const car = p.createVector(1, 1, 1.3).mult(50);
         const floorDepthOthers = 50;
         return {
             numCars: 8,
@@ -60,6 +60,7 @@ new p5(p => {
         building = new Building(settings, cars);
         dispatcher = new Dispatcher(p, settings, cars, stats);
         controls.createKnobs(passengerLoadTypes);
+        controls.activeCarsChange = () => dispatcher.updateCarActiveStatuses();
     };
 
     function setCanvasSize() {

@@ -22,6 +22,7 @@ export default class Car {
         this.pan = settings.numCars === 1 ? 0 : p.map(carNumber, 1, settings.numCars, -0.8, 0.8);
         this.sound = new MotorSound(this.pan);
         this.createStates();
+        this.active = false;
         this.state = this.STATE_IDLE;
     }
 
@@ -99,7 +100,7 @@ export default class Car {
         const p = this.p;
         p.stroke('silver');
         p.strokeWeight(2);
-        p.fill(194, 255 * 0.5);
+        p.fill(194, 255 * (this.active ? 0.6 : 0.3));
         p.pushed(() => {
             const gc = this.settings.geom.car;
             p.translate(this.carCenterX(), this.y + gc.y / 2, this.settings.geom.carCenterZ);
