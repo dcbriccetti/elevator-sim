@@ -8,7 +8,6 @@ export default class Car {
         this.carNumber = carNumber;
         const gc = settings.geom.car;
         this.doorDims = p.createVector(gc.x / 4, gc.y, 5);
-        this.doorOpenMs = 2500;
         const interCarSpacing = gc.x;
         this.carHorizontalSpacing = gc.x + interCarSpacing;
         const carsGroupWidth = settings.numCars * gc.x + (settings.numCars - 1) * interCarSpacing;
@@ -143,29 +142,31 @@ export default class Car {
                 this.move(p);
                 break;
             case this.STATE_OPENING:
-                if (this.doorOpenFraction < 1.0) {
-                    this.doorOpenFraction += 0.05;  // Open doors
-                } else {
+                this.doorOpenFraction = p.constrain((this.nowSecs() - this.doorOpStarted) / this.settings.doorMovementSecs, 0, 1);
+                if (this.doorOpenFraction === 1) {
                     this.state = this.STATE_OPEN;
                     this.openSince = p.millis();
                 }
                 break;
             case this.STATE_OPEN:
-                const timeToClose = this.openSince + this.doorOpenMs;
+                const timeToClose = this.openSince + this.settings.doorOpenMs;
                 const timeToWait = timeToClose - p.millis();
                 if (timeToWait <= 0) {
                     this.state = this.STATE_CLOSING;
+                    this.doorOpStarted = this.nowSecs();
                 }
                 break;
             case this.STATE_CLOSING:
-                if (this.doorOpenFraction > 0) {
-                    this.doorOpenFraction -= 0.05;  // Close doors
-                } else {
+                this.doorOpenFraction = 1 - p.constrain((this.nowSecs() - this.doorOpStarted) / this.settings.doorMovementSecs, 0, 1);
+                if (this.doorOpenFraction === 0) {
                     this.state = this.STATE_IDLE;
-                    this.doorOpenFraction = 0;
                 }
                 break;
         }
+    }
+
+    nowSecs() {
+        return this.p.millis() / 1000;
     }
 
     idle(p) {
@@ -215,6 +216,7 @@ export default class Car {
         if (absTravelLeftAfterMove < 1) {
             this.y = this.endY;
             this.sound.osc.amp(0, 0.02);
+            this.doorOpStarted = this.nowSecs();
             this.state = this.STATE_OPENING;
             this.removeCurrentFloorFromDest();
             if (this.settings.volume > 0) {

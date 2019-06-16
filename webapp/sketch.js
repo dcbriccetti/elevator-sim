@@ -13,6 +13,8 @@ new p5(p => {
         const floorDepthOthers = 50;
         return {
             numCars: 8,
+            doorMovementSecs: 0.4,
+            doorOpenMs: 2500,
             numActiveCars: 0,
             geom: {
                 scaleMetersTo3dUnits: 16,  // Some objects are defined with metric dimensions
