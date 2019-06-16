@@ -6,6 +6,7 @@ export default class Car {
         this.settings = settings;
         this.stats = stats;
         this.carNumber = carNumber;
+
         const gc = settings.geom.car;
         this.doorDims = p.createVector(gc.x / 4, gc.y, 5);
         const interCarSpacing = gc.x;
@@ -17,6 +18,7 @@ export default class Car {
         this.goingUp = true;
         this.doorOpenFraction = 0;  // 0…1 = closed…open
         this.destFloors = [];
+        this.riders = [];
         this.pan = settings.numCars === 1 ? 0 : p.map(carNumber, 1, settings.numCars, -0.8, 0.8);
         this.sound = new MotorSound(this.pan);
         this.createStates();
@@ -224,6 +226,18 @@ export default class Car {
                 p.dingSound.play();
             }
         }
+    }
+
+    addRider(rider) {
+        this.riders.push(rider);
+    }
+
+    removeRider(rider) {
+        this.riders = this.riders.filter(r => r !== rider);
+    }
+
+    numRidersNotGoingToFloor(floor) {
+        return this.riders.filter(rider => rider.destFloor !== floor).length;
     }
 
     decelerating() {

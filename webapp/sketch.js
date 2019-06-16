@@ -15,6 +15,7 @@ new p5(p => {
             numCars: 8,
             doorMovementSecs: 0.4,
             doorOpenMs: 2500,
+            maxRidersPerCar: 25,
             numActiveCars: 0,
             geom: {
                 scaleMetersTo3dUnits: 16,  // Some objects are defined with metric dimensions

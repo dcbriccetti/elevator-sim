@@ -83,8 +83,9 @@ export default class Rider {
         const yThisFloor = this.p.yFromFloor(this.startFloor);
         const openCar = this.cars.slice(0, this.settings.numActiveCars).find(car =>
             car.state === car.STATE_OPEN && car.y === yThisFloor);
-        if (openCar) {
+        if (openCar && openCar.numRidersNotGoingToFloor(this.startFloor) < this.settings.maxRidersPerCar) {
             this.carIn = openCar;
+            this.carIn.addRider(this);
             this.carIn.goTo(this.destFloor);
             this.setBoardingPath(openCar);
             this.millisAtLastMove = this.p.millis();
@@ -101,6 +102,7 @@ export default class Rider {
         const car = this.carIn;
         this.pos.y = car.y;
         if (car.state === car.STATE_OPEN && car.y === this.p.yFromFloor(this.destFloor)) {
+            car.removeRider(this);
             this.setExitingPath(car);
             this.millisAtLastMove = this.p.millis();
             --this.stats.riders.riding;
