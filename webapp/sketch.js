@@ -25,6 +25,7 @@ new p5(p => {
                 floorDepthGround: floorDepthOthers * 2,
                 floorDepthOthers: floorDepthOthers,
             },
+            controlMode: 0, // Auto
             elevSpeed: 5,
             view: 0,
             passengerLoad: 0,
@@ -75,6 +76,25 @@ new p5(p => {
         mouseHasMoved = true;
     };
 
+    function manuallySummon() {
+        if (settings.controlMode === 1 && p.mouseX >= 0 && p.mouseY >= 0) {
+            const dist = car => Math.abs(car.carCenterX() - p.mouseX);
+            const car = dispatcher.activeCars().reduce((a, b) => a && b ? dist(a) > dist(b) ? b : a : b, undefined);
+            if (car) {
+                const y = p.height - p.mouseY;
+                car.goTo(p.floorFromY(y), true);
+            }
+        }
+    }
+
+    p.mousePressed = function() {
+        manuallySummon();
+    };
+
+    p.mouseDragged = function() {
+        manuallySummon();
+    };
+
     p.pushed = function(block) {
         p.push();
         block();
@@ -119,14 +139,19 @@ new p5(p => {
     }
 
     function setUpCamera() {
+        function setDefault() {
+            p.camera(0, 0, (p.height / 2.0) / p.tan(p.PI * 30.0 / 180.0), 0, 0, 0, 0, 1, 0);
+        }
+
         if (settings.projectionType === 1) {
             p.ortho();
-            // Set default camera
-            p.camera(0, 0, (p.height / 2.0) / p.tan(p.PI * 30.0 / 180.0), 0, 0, 0, 0, 1, 0);
+            setDefault();
         } else {
             p.perspective();
-            const avgCarY = cars.map(car => car.y).reduce((a, b) => a + b, 0) / cars.length;
-            p.camera(0, -avgCarY, (p.height / 2.0) / p.tan(p.PI * 30.0 / 180.0), 0, 0, 0, 0, 1, 0);
+            if (settings.controlMode === 0 /* Auto */) {
+                const avgCarY = cars.map(car => car.y).reduce((a, b) => a + b, 0) / cars.length;
+                p.camera(0, -avgCarY, (p.height / 2.0) / p.tan(p.PI * 30.0 / 180.0), 0, 0, 0, 0, 1, 0);
+            } else setDefault();
         }
     }
 

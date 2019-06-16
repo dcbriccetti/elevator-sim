@@ -19,22 +19,25 @@ export default class Dispatcher {
 
     process() {
         this.processRiders();
-        const request = this.carCallQueue.shift();
 
-        if (request) {
-            const floorY = this.p.yFromFloor(request.floor);
-            const activeCars = this.activeCars();
-            const idleCars = activeCars.filter(car => car.state === car.STATE_IDLE && car.goingUp === request.goingUp);
-            const dist = car => Math.abs(car.y - floorY);
-            const closest = cars => cars.reduce((a, b) => a && b ? dist(a) > dist(b) ? b : a : b, undefined);
-            const closestIdleActiveCar = closest(idleCars);
-            if (closestIdleActiveCar) {
-                closestIdleActiveCar.goTo(request.floor);
-            } else {
-                const closestActiveCar = closest(activeCars);
-                if (closestActiveCar)
-                    closestActiveCar.goTo(request.floor);
-                else this.carCallQueue.push(request);
+        if (this.settings.controlMode === 0 /* Auto */) {
+            const request = this.carCallQueue.shift();
+
+            if (request) {
+                const floorY = this.p.yFromFloor(request.floor);
+                const activeCars = this.activeCars();
+                const idleCars = activeCars.filter(car => car.state === car.STATE_IDLE && car.goingUp === request.goingUp);
+                const dist = car => Math.abs(car.y - floorY);
+                const closest = cars => cars.reduce((a, b) => a && b ? dist(a) > dist(b) ? b : a : b, undefined);
+                const closestIdleActiveCar = closest(idleCars);
+                if (closestIdleActiveCar) {
+                    closestIdleActiveCar.goTo(request.floor);
+                } else {
+                    const closestActiveCar = closest(activeCars);
+                    if (closestActiveCar)
+                        closestActiveCar.goTo(request.floor);
+                    else this.carCallQueue.push(request);
+                }
             }
         }
     }

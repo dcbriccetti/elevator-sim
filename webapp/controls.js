@@ -32,6 +32,11 @@ export default class Controls {
         projection.parent('#projectionParent');
         projection.changed(() => settings.projectionType = projection.elt.selectedIndex);
 
+        const controlMode = p.createSelect();
+        ['Auto', 'Manual'].forEach(p => controlMode.option(p));
+        controlMode.parent('#controlModeParent');
+        controlMode.changed(() => settings.controlMode = controlMode.elt.selectedIndex);
+
         const view = p.createSelect();
         ['Front', 'Side', 'Use Mouse'].forEach(v => view.option(v));
         view.parent('#viewParent');

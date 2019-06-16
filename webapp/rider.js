@@ -94,7 +94,8 @@ export default class Rider {
         const goingUp = this.destFloor > this.startFloor;
         const yThisFloor = this.p.yFromFloor(this.startFloor);
         const suitableCar = this.dispatcher.activeCars().find(car =>
-            car.state === car.STATE_OPEN && car.y === yThisFloor && car.goingUp === goingUp && car.hasRoom());
+            car.state === car.STATE_OPEN && car.y === yThisFloor &&
+            (this.settings.controlMode === 1 || car.goingUp === goingUp) && car.hasRoom());
         if (suitableCar) {
             this.carIn = suitableCar;
             this.carIn.addRider(this);

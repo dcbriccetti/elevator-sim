@@ -254,11 +254,13 @@ export default class Car {
         this.destFloors = this.destFloors.filter(f => this.p.yFromFloor(f) !== this.y);
     }
 
-    goTo(floor) {
-        if (!this.destFloors.find(f => f === floor)) {
-            this.destFloors.push(floor);
-            this.sortDestinations();
-            console.log(`Car ${this.carNumber} will go to ${floor}`);
+    goTo(floor, manual=false) {
+        if (manual || this.settings.controlMode === 0 /* Auto */) {
+            if (!this.destFloors.find(f => f === floor)) {
+                this.destFloors.push(floor);
+                this.sortDestinations();
+                console.log(`Car ${this.carNumber} will go to ${floor}`);
+            }
         }
     }
 
