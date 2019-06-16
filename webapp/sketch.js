@@ -12,7 +12,7 @@ new p5(p => {
         const car = p.createVector(1, 1, 1.5).mult(50);
         const floorDepthOthers = 50;
         return {
-            numCars: 8,
+            numCars: 6,
             doorMovementSecs: 0.4,
             doorOpenMs: 2500,
             maxRidersPerCar: 25,
@@ -52,7 +52,7 @@ new p5(p => {
         const cg = settings.geom;
         setCanvasSize();
         p.createCanvas(cg.canvas.x, cg.canvas.y, p.WEBGL).parent('main');
-        p.numFloors = Math.floor(p.height / settings.geom.storyHeight);
+        settings.numFloors = Math.floor(p.height / settings.geom.storyHeight);
         stats = new Stats();
         controls = new Controls(p, settings, stats);
         cars = Array.from(Array(settings.numCars).keys(), n => new Car(p, settings, stats, n + 1));

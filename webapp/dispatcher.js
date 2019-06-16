@@ -11,30 +11,30 @@ export default class Dispatcher {
         this.riders = [];
     }
 
-    requestCar(floor) {
-        if (! this.carCallQueue.find(el => el === floor)) {
-            this.carCallQueue.push(floor);
+    requestCar(floor, goingUp) {
+        if (! this.carCallQueue.find(request => request.floor === floor && request.goingUp === goingUp)) {
+            this.carCallQueue.push({floor: floor, goingUp: goingUp});
         }
     }
 
     process() {
         this.processRiders();
-        const floor = this.carCallQueue.shift();
+        const request = this.carCallQueue.shift();
 
-        if (floor) {
-            const floorY = this.p.yFromFloor(floor);
+        if (request) {
+            const floorY = this.p.yFromFloor(request.floor);
             const activeCars = this.cars.slice(0, this.settings.numActiveCars);
-            const idleCars = activeCars.filter(car => car.state === car.STATE_IDLE);
+            const idleCars = activeCars.filter(car => car.state === car.STATE_IDLE && car.goingUp === request.goingUp);
             const dist = car => Math.abs(car.y - floorY);
             const closest = cars => cars.reduce((a, b) => a && b ? dist(a) > dist(b) ? b : a : b, undefined);
             const closestIdleActiveCar = closest(idleCars);
             if (closestIdleActiveCar) {
-                closestIdleActiveCar.goTo(floor);
+                closestIdleActiveCar.goTo(request.floor);
             } else {
                 const closestActiveCar = closest(activeCars);
                 if (closestActiveCar)
-                    closestActiveCar.goTo(floor);
-                else this.carCallQueue.push(floor);
+                    closestActiveCar.goTo(request.floor);
+                else this.carCallQueue.push(request);
             }
         }
     }
@@ -51,10 +51,7 @@ export default class Dispatcher {
 
     possiblySpawnNewRider() {
         const p = this.p;
-        function randomFloor() {
-            return p.random(1) < 0.5 ? 1 : Math.floor(p.random(p.numFloors) + 1);
-        }
-
+        const randomFloor = () => p.random(1) < 0.5 ? 1 : Math.floor(p.random(this.settings.numFloors) + 1);
         const load = this.settings.passengerLoad;
         const desiredPerMin = load === 0 ? // Varying
             p.map(p.sin(p.millis() / 1e5), -1, 1, 10, 60) :
@@ -68,8 +65,7 @@ export default class Dispatcher {
             while (start === end) {
                 end = randomFloor();
             }
-            this.riders.push(new Rider(p, this.settings, start, end, this.cars, this.stats));
-            this.requestCar(start);
+            this.riders.push(new Rider(p, this.settings, start, end, this, this.cars, this.stats));
         }
     }
 }

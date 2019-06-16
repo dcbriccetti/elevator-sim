@@ -8,7 +8,7 @@ export default class Building {
     drawFloors(p) {
         p.noStroke();
         p.fill(0, 0, 100, 20);
-        for (let floor = 1; floor <= p.numFloors; ++floor) {
+        for (let floor = 1; floor <= this.settings.numFloors; ++floor) {
             const floorY = p.yFromFloor(floor);
             p.pushed(() => {
                 const floorHeight = 4;
@@ -26,18 +26,21 @@ export default class Building {
                     p.noStroke();
                     const carReady = floorY === car.y && (car.state === car.STATE_OPENING || car.state === car.STATE_OPEN);
                     if (carReady) {
-                        p.stroke(125, 84);
-                        p.fill(255, 248);
-                        p.plane(14, indHeight);
-                        const downArrow = (! car.goingUp && floor !== 1) || floor === p.numFloors;
-                        p.noStroke();
-                        p.fill('green');
-                        downArrow ?
-                            p.triangle(0, -4, -4,  5, 4,  5) :
-                            p.triangle(0,  5, -4, -4, 4, -4);
+                        this.drawUpDownIndicator(p, indHeight, car.goingUp);
                     }
                 });
             });
         }
+    }
+
+    drawUpDownIndicator(p, indHeight, goingUp) {
+        p.stroke(125, 84);
+        p.fill(255, 248);
+        p.plane(14, indHeight);
+        p.noStroke();
+        p.fill('green');
+        goingUp ?
+            p.triangle(0, 5, -4, -4, 4, -4) :
+            p.triangle(0, -4, -4, 5, 4, 5);
     }
 }

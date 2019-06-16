@@ -221,6 +221,8 @@ export default class Car {
             this.doorOpStarted = this.nowSecs();
             this.state = this.STATE_OPENING;
             this.removeCurrentFloorFromDest();
+            if (this.y === p.yFromFloor(1)) this.goingUp = true;
+            if (this.y === p.yFromFloor(this.settings.numFloors)) this.goingUp = false;
             if (this.settings.volume > 0) {
                 p.dingSound.pan(this.pan);
                 p.dingSound.play();
@@ -236,8 +238,8 @@ export default class Car {
         this.riders = this.riders.filter(r => r !== rider);
     }
 
-    numRidersNotGoingToFloor(floor) {
-        return this.riders.filter(rider => rider.destFloor !== floor).length;
+    hasRoom() {
+        return this.riders.length < this.settings.maxRidersPerCar;
     }
 
     decelerating() {

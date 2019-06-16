@@ -1,10 +1,11 @@
 /** Manages an elevator rider */
 export default class Rider {
-    constructor(p, settings, startFloor, destFloor, cars, stats) {
+    constructor(p, settings, startFloor, destFloor, dispatcher, cars, stats) {
         this.p = p;
         this.settings = settings;
         this.startFloor = startFloor;
         this.destFloor = destFloor;
+        this.dispatcher = dispatcher;
         this.cars = cars;
         this.stats = stats;
 
@@ -55,7 +56,7 @@ export default class Rider {
         const p = this.p;
         switch (this.state) {
             case this.STATE_ARRIVING:
-                this.followPath(this.arrivingPath, this.STATE_WAITING);
+                this.followPath(this.arrivingPath, this.STATE_WAITING, () => this.requestCar());
                 break;
             case this.STATE_WAITING:
                 this.waitForCar();
@@ -69,6 +70,7 @@ export default class Rider {
                 if (canceled) {
                     this.carIn.removeRider(this);
                     this.carIn = undefined;
+                    this.requestCar();
                     this.state = this.STATE_WAITING;
                 }
                 break;
@@ -84,15 +86,20 @@ export default class Rider {
         }
     }
 
+    requestCar() {
+        this.dispatcher.requestCar(this.startFloor, this.destFloor > this.startFloor);
+    }
+
     waitForCar() {
+        const goingUp = this.destFloor > this.startFloor;
         const yThisFloor = this.p.yFromFloor(this.startFloor);
-        const openCar = this.cars.slice(0, this.settings.numActiveCars).find(car =>
-            car.state === car.STATE_OPEN && car.y === yThisFloor);
-        if (openCar && openCar.numRidersNotGoingToFloor(this.startFloor) < this.settings.maxRidersPerCar) {
-            this.carIn = openCar;
+        const suitableCar = this.cars.slice(0, this.settings.numActiveCars).find(car =>
+            car.state === car.STATE_OPEN && car.y === yThisFloor && car.goingUp === goingUp && car.hasRoom());
+        if (suitableCar) {
+            this.carIn = suitableCar;
             this.carIn.addRider(this);
             this.carIn.goTo(this.destFloor);
-            this.setBoardingPath(openCar);
+            this.setBoardingPath(suitableCar);
             this.millisAtLastMove = this.p.millis();
             this.state = this.STATE_BOARDING;
         }
