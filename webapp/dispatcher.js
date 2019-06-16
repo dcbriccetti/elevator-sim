@@ -23,7 +23,7 @@ export default class Dispatcher {
 
         if (request) {
             const floorY = this.p.yFromFloor(request.floor);
-            const activeCars = this.cars.slice(0, this.settings.numActiveCars);
+            const activeCars = this.activeCars();
             const idleCars = activeCars.filter(car => car.state === car.STATE_IDLE && car.goingUp === request.goingUp);
             const dist = car => Math.abs(car.y - floorY);
             const closest = cars => cars.reduce((a, b) => a && b ? dist(a) > dist(b) ? b : a : b, undefined);
@@ -37,6 +37,20 @@ export default class Dispatcher {
                 else this.carCallQueue.push(request);
             }
         }
+    }
+
+    /** Returns an array of active cars, selected from the middle of the group, moving outward */
+    activeCars() {
+        if (this.settings.numActiveCars !== this.numActiveCarsInCache) {
+            const carIndexes = [...Array(this.settings.numCars).keys()];
+            const middleIndex = carIndexes[Math.floor(carIndexes.length / 2)];
+            const distFromMiddle = i => Math.abs(i - middleIndex);
+            carIndexes.sort((a, b) => distFromMiddle(a) - distFromMiddle(b));
+            const activeCarIndexes = carIndexes.slice(0, this.settings.numActiveCars);
+            this.cachedActiveCars = Array.from(activeCarIndexes, i => this.cars[i]);
+            this.numActiveCarsInCache = this.settings.numActiveCars;
+        }
+        return this.cachedActiveCars;
     }
 
     processRiders() {

@@ -93,7 +93,7 @@ export default class Rider {
     waitForCar() {
         const goingUp = this.destFloor > this.startFloor;
         const yThisFloor = this.p.yFromFloor(this.startFloor);
-        const suitableCar = this.cars.slice(0, this.settings.numActiveCars).find(car =>
+        const suitableCar = this.dispatcher.activeCars().find(car =>
             car.state === car.STATE_OPEN && car.y === yThisFloor && car.goingUp === goingUp && car.hasRoom());
         if (suitableCar) {
             this.carIn = suitableCar;

@@ -12,7 +12,7 @@ new p5(p => {
         const car = p.createVector(1, 1, 1.5).mult(50);
         const floorDepthOthers = 50;
         return {
-            numCars: 6,
+            numCars: 8,
             doorMovementSecs: 0.4,
             doorOpenMs: 2500,
             maxRidersPerCar: 25,
