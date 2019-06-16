@@ -1,12 +1,11 @@
 /** Manages an elevator rider */
 export default class Rider {
-    constructor(p, settings, startFloor, destFloor, dispatcher, cars, stats) {
+    constructor(p, settings, startFloor, destFloor, dispatcher, stats) {
         this.p = p;
         this.settings = settings;
         this.startFloor = startFloor;
         this.destFloor = destFloor;
         this.dispatcher = dispatcher;
-        this.cars = cars;
         this.stats = stats;
 
         this.createStates();
@@ -17,7 +16,7 @@ export default class Rider {
         const travelDirection = p.random([-1, 1]);
         const enterX = p.width / 2 - travelDirection * p.width / 2;
         this.pos = p.createVector(enterX, p.yFromFloor(startFloor), this.randomFloorZ());
-        const waitX = enterX + travelDirection * p.randomGaussian(p.width / 4, p.width / 10);
+        const waitX = enterX + travelDirection * p.randomGaussian(p.width / 3, p.width / 4);
         this.arrivingPath = [p.createVector(waitX, this.pos.y, this.pos.z)];
         this.carIn = undefined;
         this.color = [p.random(255), p.random(255), p.random(255)];
@@ -39,11 +38,12 @@ export default class Rider {
         const p = this.p;
         const meanHeight = 1.7;
         const meanWeight = 85;
-        this.height = p.constrain(p.randomGaussian(meanHeight, 0.5), 0.8, 2.5);
+        this.height = p.constrain(p.randomGaussian(meanHeight, 0.5), 1, 2.2);
         this.weight = p.constrain(p.randomGaussian(meanWeight, 10), 30, 150);
         const bmi = this.weight / (this.height * this.height);
-        const normalBmiDiff = p.constrain(bmi - 25, -10, 10);
-        const widthMultiple = p.map(normalBmiDiff, -10, 10, 0.6, 2.5);
+        const bmiDiffLimit = 10;
+        const normalBmiDiff = p.constrain(bmi - 25, -bmiDiffLimit, bmiDiffLimit);
+        const widthMultiple = p.map(normalBmiDiff, -bmiDiffLimit, bmiDiffLimit, 0.7, 2.1);
         const normalWaistDiam = .90 / Math.PI; // d = circumference / π
         this.width = normalWaistDiam * widthMultiple;
     }
