@@ -1,11 +1,13 @@
 import MotorSound from './sound.js';
 
 export default class Car {
-    constructor(p, settings, stats, carNumber) {
+    constructor(p, settings, stats, carNumber, talker, voiceName) {
         this.p = p;
         this.settings = settings;
         this.stats = stats;
         this.carNumber = carNumber;
+        this.talker = talker;
+        this.voiceName = voiceName;
 
         const gc = settings.geom.car;
         this.doorDims = p.createVector(gc.x / 4, gc.y, 5);
@@ -183,7 +185,7 @@ export default class Car {
             }
             this.stats.addMovementCosts(Math.abs(p.floorFromY(this.y) - nextDest), this.settings.elevSpeed);
             this.state = this.STATE_MOVING;
-            this.sound.osc.amp(p.map(this.settings.volume, 0, 10, 0, 0.3), 0.02);
+            this.sound.osc.amp(p.map(this.settings.volume, 0, 10, 0, 0.6), 0.02);
             console.log(`Car ${this.carNumber} moving to ${nextDest} of ${this.destFloors}`);
             this.lastMoveTime = p.millis() / 1000;
             this.speed = 0;
@@ -228,6 +230,7 @@ export default class Car {
                 p.dingSound.pan(this.pan);
                 p.dingSound.play();
             }
+            // this.talker.speak('' + p.floorFromY(this.y), this.voiceName);
         }
     }
 

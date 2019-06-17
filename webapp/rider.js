@@ -1,12 +1,13 @@
 /** Manages an elevator rider */
 export default class Rider {
-    constructor(p, settings, startFloor, destFloor, dispatcher, stats) {
+    constructor(p, settings, startFloor, destFloor, dispatcher, stats, talker) {
         this.p = p;
         this.settings = settings;
         this.startFloor = startFloor;
         this.destFloor = destFloor;
         this.dispatcher = dispatcher;
         this.stats = stats;
+        this.talker = talker;
 
         this.createStates();
         this.state = this.STATE_ARRIVING;
@@ -56,7 +57,10 @@ export default class Rider {
         const p = this.p;
         switch (this.state) {
             case this.STATE_ARRIVING:
-                this.followPath(this.arrivingPath, this.STATE_WAITING, () => this.requestCar());
+                this.followPath(this.arrivingPath, this.STATE_WAITING, () => {
+                    this.talker.speakRandom('arriving', undefined, 0.1);
+                    this.requestCar()
+                });
                 break;
             case this.STATE_WAITING:
                 this.waitForCar();
@@ -68,6 +72,7 @@ export default class Rider {
                     this.stats.riders.ridingKg += this.weight;
                 }, () => this.carIn.state === this.carIn.STATE_OPEN);
                 if (canceled) {
+                    this.talker.speakRandom('tooLate', undefined, 1);
                     this.carIn.removeRider(this);
                     this.carIn = undefined;
                     this.requestCar();
@@ -93,9 +98,13 @@ export default class Rider {
     waitForCar() {
         const goingUp = this.destFloor > this.startFloor;
         const yThisFloor = this.p.yFromFloor(this.startFloor);
-        const suitableCar = this.dispatcher.activeCars().find(car =>
-            car.state === car.STATE_OPEN && car.y === yThisFloor &&
-            (this.settings.controlMode === 1 || car.goingUp === goingUp) && car.hasRoom());
+        let suitableExceptFullEncountered = false;
+        const suitableCar = this.dispatcher.activeCars().find(car => {
+            const allButRoom = car.state === car.STATE_OPEN && car.y === yThisFloor &&
+                (this.settings.controlMode === 1 || car.goingUp === goingUp);
+            if (allButRoom && ! car.hasRoom()) suitableExceptFullEncountered = true;
+            return allButRoom && car.hasRoom();
+        });
         if (suitableCar) {
             this.carIn = suitableCar;
             this.carIn.addRider(this);
@@ -103,7 +112,7 @@ export default class Rider {
             this.setBoardingPath(suitableCar);
             this.millisAtLastMove = this.p.millis();
             this.state = this.STATE_BOARDING;
-        }
+        } else if (suitableExceptFullEncountered) this.talker.speakRandom('carFull', undefined, 0.3);
     }
 
     outsideDoorPos(openCar) {
@@ -121,6 +130,7 @@ export default class Rider {
             --this.stats.riders.riding;
             this.stats.riders.ridingKg -= this.weight;
             ++this.stats.riders.served;
+            this.talker.speakRandom('leaving', undefined, 0.1);
             this.state = this.STATE_EXITING;
         }
     }

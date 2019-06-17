@@ -2,11 +2,13 @@ import Rider from './rider.js'
 
 /** Manages riders, and calls elevators for them. */
 export default class Dispatcher {
-    constructor(p, settings, cars, stats) {
+    constructor(p, settings, cars, stats, talker) {
         this.p = p;
         this.settings = settings;
         this.cars = cars;
         this.stats = stats;
+        this.talker = talker;
+
         this.carCallQueue = [];
         this.riders = [];
     }
@@ -90,7 +92,7 @@ export default class Dispatcher {
             while (start === end) {
                 end = randomFloor();
             }
-            this.riders.push(new Rider(p, this.settings, start, end, this, this.stats));
+            this.riders.push(new Rider(p, this.settings, start, end, this, this.stats, this.talker));
         }
     }
 }

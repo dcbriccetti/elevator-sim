@@ -4,6 +4,7 @@ export default class Controls {
         this.settings = settings;
         this.stats = stats;
         this.activeCarsChange = () => {};
+        this.volumeChange = v => {};
     }
 
     createKnobs(passengerLoadTypes) {
@@ -28,7 +29,8 @@ export default class Controls {
               p.getAudioContext().resume();
             }
             settings.volume = volume.value();
-            p.dingSound.setVolume(volume.value() / 500);  // It’s much louder than the motors
+            p.dingSound.setVolume(volume.value() / 100);  // It’s much louder than the motors
+            this.volumeChange(settings.volume / 10);
         });
 
         const projection = p.createSelect();

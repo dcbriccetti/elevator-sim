@@ -3,6 +3,7 @@ import Building from './building.js'
 import Dispatcher from './dispatcher.js'
 import Car from './car.js'
 import Stats from './stats.js'
+import Talker from './talker.js'
 
 new p5(p => {
     const passengerLoadTypes =
@@ -44,6 +45,8 @@ new p5(p => {
     let building;
     let stats;
     let dispatcher;
+    let talker;
+    let ready = false;
 
     p.preload = function() {
         p.dingSound = p.loadSound('assets/ding.wav');
@@ -56,11 +59,18 @@ new p5(p => {
         settings.numFloors = Math.floor(p.height / settings.geom.storyHeight);
         stats = new Stats();
         controls = new Controls(p, settings, stats);
-        cars = Array.from(Array(settings.numCars).keys(), n => new Car(p, settings, stats, n + 1));
-        building = new Building(settings, cars);
-        dispatcher = new Dispatcher(p, settings, cars, stats);
-        controls.createKnobs(passengerLoadTypes);
-        controls.activeCarsChange = () => dispatcher.updateCarActiveStatuses();
+        talker = new Talker((voiceNames, englishVoiceNames) => {
+            if (! ready) { // onVoicesChanged gets called more than once, for some reason
+                cars = Array.from(Array(settings.numCars).keys(), n => new Car(p, settings, stats, n + 1,
+                    talker, englishVoiceNames[n % englishVoiceNames.length]));
+                building = new Building(settings, cars);
+                dispatcher = new Dispatcher(p, settings, cars, stats, talker);
+                controls.createKnobs(passengerLoadTypes);
+                controls.activeCarsChange = () => dispatcher.updateCarActiveStatuses();
+                controls.volumeChange = v => talker.volume(v);
+                ready = true;
+            }
+        });
     };
 
     function setCanvasSize() {
@@ -159,6 +169,7 @@ new p5(p => {
     let lastDrawTimeSecs = p.millis() / 1000;
 
     p.draw = function () {
+        if (! ready) return;
         const now = (p.millis() / 1000);
         const timeSinceLastDrawSecs = now - lastDrawTimeSecs;
         lastDrawTimeSecs = now;
