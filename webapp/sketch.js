@@ -59,17 +59,16 @@ new p5(p => {
         settings.numFloors = Math.floor(p.height / settings.geom.storyHeight);
         stats = new Stats();
         controls = new Controls(p, settings, stats);
+        talker = {speakRandom: (a, b, c) => {}}; // Temporary dummy talker for Safari
         talker = new Talker((voiceNames, englishVoiceNames) => {
-            if (! ready) { // onVoicesChanged gets called more than once, for some reason
-                cars = Array.from(Array(settings.numCars).keys(), n => new Car(p, settings, stats, n + 1,
-                    talker, englishVoiceNames[n % englishVoiceNames.length]));
-                building = new Building(settings, cars);
-                dispatcher = new Dispatcher(p, settings, cars, stats, talker);
-                controls.createKnobs(passengerLoadTypes);
-                controls.activeCarsChange = () => dispatcher.updateCarActiveStatuses();
-                controls.volumeChange = v => talker.volume(v);
-                ready = true;
-            }
+            cars = Array.from(Array(settings.numCars).keys(), n => new Car(p, settings, stats, n + 1,
+                talker, englishVoiceNames[n % englishVoiceNames.length]));
+            building = new Building(settings, cars);
+            dispatcher = new Dispatcher(p, settings, cars, stats, talker);
+            controls.createKnobs(passengerLoadTypes);
+            controls.activeCarsChange = () => dispatcher.updateCarActiveStatuses();
+            controls.volumeChange = v => talker.volume(v);
+            ready = true;
         });
     };
 
