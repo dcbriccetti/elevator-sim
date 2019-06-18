@@ -32,6 +32,7 @@ new p5(p => {
             passengerLoad: 0,
             passengerLoadNumManualLevels: passengerLoadTypes.length - 1, // The first is not manual
             volume: 0,
+            speakersType: 0,
         };
     }
 
@@ -60,7 +61,7 @@ new p5(p => {
         stats = new Stats();
         controls = new Controls(p, settings, stats);
         talker = {speakRandom: (a, b, c) => {}}; // Temporary dummy talker for Safari
-        talker = new Talker((voiceNames, englishVoiceNames) => {
+        talker = new Talker(settings, (voiceNames, englishVoiceNames) => {
             cars = Array.from(Array(settings.numCars).keys(), n => new Car(p, settings, stats, n + 1,
                 talker, englishVoiceNames[n % englishVoiceNames.length]));
             building = new Building(settings, cars);
