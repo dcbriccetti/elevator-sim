@@ -56,5 +56,10 @@ export default class Controls {
         this.paymentsChart = p.createGraphics(this.stats.maxRecentRiderPayments,
             15).parent('#paymentsChart');
         $('#paymentsChart canvas').show();
+        
+        const speakers = p.createSelect();
+        ['None', 'All', 'Native English'].forEach(p => speakers.option(p));
+        speakers.parent('#speakersParent');
+        speakers.changed(() => settings.speakersType = speakers.elt.selectedIndex);
     }
 }
