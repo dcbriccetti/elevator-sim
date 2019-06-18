@@ -1,5 +1,6 @@
 export default class Talker {
-    constructor(loaded = (voices, englishVoices) => {}) {
+    constructor(settings, loaded = (voices, englishVoices) => {}) {
+        this.settings = settings;
         this.speech = speechSynthesis;
         this.utterance = new SpeechSynthesisUtterance();
         this.utterance.volume = 0;
@@ -49,8 +50,9 @@ export default class Talker {
     }
 
     speak(message, voiceName) {
-        if (this.voices.length && ! this.speech.speaking) {
-            this.utterance.voice = voiceName ? this.voice(voiceName) : this.randChoice(this.voices);
+        if (this.voices.length && ! this.speech.speaking && this.settings.speakersType > 0) {
+            this.utterance.voice = voiceName ? this.voice(voiceName) : this.randChoice(this.settings.speakersType === 1 ?
+            this.voices : this.englishVoices);
             console.log(this.utterance.voice);
             this.utterance.text = message;
             this.speech.speak(this.utterance);
