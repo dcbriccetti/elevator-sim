@@ -21,9 +21,7 @@ export default class Talker {
         const talker = this;
 
         function populateVoiceList() {
-            console.log('populateVoiceList called');
             if (typeof speechSynthesis === 'undefined' || talker.voices !== undefined) {
-                console.log('skipping');
                 return;
             }
 
