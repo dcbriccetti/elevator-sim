@@ -230,7 +230,6 @@ export default class Car {
                 p.dingSound.pan(this.pan);
                 p.dingSound.play();
             }
-            // this.talker.speak('' + p.floorFromY(this.y), this.voiceName);
         }
     }
 
