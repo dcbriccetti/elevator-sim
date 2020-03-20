@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "sourceMap": true,
+    "outFile": "app.js"
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}

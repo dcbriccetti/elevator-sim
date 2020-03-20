@@ -1,4 +1,6 @@
-export default class Building {
+class Building {
+    private settings: any;
+    private cars: any;
 
     constructor(settings, cars) {
         this.settings = settings;
@@ -24,7 +26,7 @@ export default class Building {
                     p.translate(car.carCenterX(), floorY + gc.y + indHeight / 2,
                         this.settings.geom.carCenterZ + gc.z / 2);
                     p.noStroke();
-                    const carReady = floorY === car.y && (car.state === car.STATE_OPENING || car.state === car.STATE_OPEN);
+                    const carReady = floorY === car.y && (car.state === CarState.Opening || car.state === CarState.Open);
                     if (carReady) {
                         this.drawUpDownIndicator(p, indHeight, car.goingUp);
                     }

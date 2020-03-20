@@ -1,7 +1,15 @@
-import Rider from './rider.js'
-
 /** Manages riders, and calls elevators for them. */
-export default class Dispatcher {
+class Dispatcher {
+    private readonly p: any;
+    private readonly settings: any;
+    private readonly cars: any;
+    private readonly stats: any;
+    private readonly talker: any;
+    private carCallQueue: any[];
+    private riders: any[];
+    private numActiveCarsInCache: number;
+    private cachedActiveCars: any[];
+
     constructor(p, settings, cars, stats, talker) {
         this.p = p;
         this.settings = settings;
@@ -28,7 +36,7 @@ export default class Dispatcher {
             if (request) {
                 const floorY = this.p.yFromFloor(request.floor);
                 const activeCars = this.activeCars();
-                const idleCars = activeCars.filter(car => car.state === car.STATE_IDLE && car.goingUp === request.goingUp);
+                const idleCars = activeCars.filter(car => car.state === CarState.Idle && car.goingUp === request.goingUp);
                 const dist = car => Math.abs(car.y - floorY);
                 const closest = cars => cars.reduce((a, b) => a && b ? dist(a) > dist(b) ? b : a : b, undefined);
                 const closestIdleActiveCar = closest(idleCars);
@@ -72,7 +80,7 @@ export default class Dispatcher {
             rider.draw();
         });
 
-        this.riders = this.riders.filter(rider => rider.state !== rider.STATE_EXITED);
+        this.riders = this.riders.filter(rider => rider.state !== RiderState.Exited);
         this.possiblySpawnNewRider();
     }
 

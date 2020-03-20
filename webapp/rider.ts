@@ -1,5 +1,30 @@
 /** Manages an elevator rider */
-export default class Rider {
+enum RiderState {Arriving, Waiting, Boarding, Riding, Exiting, Exited}
+
+class Rider {
+    private readonly p: any;
+    private settings: any;
+    private readonly startFloor: any;
+    private readonly destFloor: any;
+    private dispatcher: any;
+    private stats: any;
+    private talker: any;
+    private state: RiderState;
+    private readonly arrivalTime: number;
+    private readonly carGeom: any;
+    private readonly pos: any;
+    private readonly arrivingPath: any[];
+    private carIn: any;
+    private readonly color: number[];
+    private readonly movementPerMs: number;
+    private readonly destNumberDisplay: any;
+    private height: number;
+    private weight: number;
+    private width: number;
+    private boardingPath: any;
+    private exitingPath: any;
+    private millisAtLastMove: number;
+
     constructor(p, settings, startFloor, destFloor, dispatcher, stats, talker) {
         this.p = p;
         this.settings = settings;
@@ -9,8 +34,7 @@ export default class Rider {
         this.stats = stats;
         this.talker = talker;
 
-        this.createStates();
-        this.state = this.STATE_ARRIVING;
+        this.state = RiderState.Arriving;
         this.arrivalTime = p.millis() / 1000;
         this.carGeom = settings.geom.car;
         this.setBodyAttributes();
@@ -24,15 +48,6 @@ export default class Rider {
         this.movementPerMs = p.randomGaussian(300, 50) / 1000;
         this.destNumberDisplay = this.setUpDestNumberDisplay(p);
         ++stats.riders.waiting;
-    }
-
-    createStates() {
-        this.STATE_ARRIVING = 1;
-        this.STATE_WAITING  = 2;
-        this.STATE_BOARDING = 3;
-        this.STATE_RIDING   = 4;
-        this.STATE_EXITING  = 5;
-        this.STATE_EXITED   = 6;
     }
 
     setBodyAttributes() {
@@ -56,34 +71,34 @@ export default class Rider {
     update() {
         const p = this.p;
         switch (this.state) {
-            case this.STATE_ARRIVING:
-                this.followPath(this.arrivingPath, this.STATE_WAITING, () => {
+            case RiderState.Arriving:
+                this.followPath(this.arrivingPath, RiderState.Waiting, () => {
                     this.talker.speakRandom('arriving', undefined, 0.1);
                     this.requestCar()
                 });
                 break;
-            case this.STATE_WAITING:
+            case RiderState.Waiting:
                 this.waitForCar();
                 break;
-            case this.STATE_BOARDING:
-                const canceled = this.followPath(this.boardingPath, this.STATE_RIDING, () => {
+            case RiderState.Boarding:
+                const canceled = this.followPath(this.boardingPath, RiderState.Riding, () => {
                     --this.stats.riders.waiting;
                     ++this.stats.riders.riding;
                     this.stats.riders.ridingKg += this.weight;
-                }, () => this.carIn.state === this.carIn.STATE_OPEN);
+                }, () => this.carIn.state === CarState.Open);
                 if (canceled) {
                     this.talker.speakRandom('tooLate', undefined, 1);
                     this.carIn.removeRider(this);
                     this.carIn = undefined;
                     this.requestCar();
-                    this.state = this.STATE_WAITING;
+                    this.state = RiderState.Waiting;
                 }
                 break;
-            case this.STATE_RIDING:
+            case RiderState.Riding:
                 this.ride();
                 break;
-            case this.STATE_EXITING:
-                this.followPath(this.exitingPath, this.STATE_EXITED, () => {
+            case RiderState.Exiting:
+                this.followPath(this.exitingPath, RiderState.Exited, () => {
                     const tripTime = p.millis() / 1000 - this.arrivalTime;
                     this.stats.chargeRider(p, tripTime);
                 });
@@ -100,7 +115,7 @@ export default class Rider {
         const yThisFloor = this.p.yFromFloor(this.startFloor);
         let suitableExceptFullEncountered = false;
         const suitableCar = this.dispatcher.activeCars().find(car => {
-            const allButRoom = car.state === car.STATE_OPEN && car.y === yThisFloor &&
+            const allButRoom = car.state === CarState.Open && car.y === yThisFloor &&
                 (this.settings.controlMode === 1 || car.goingUp === goingUp);
             if (allButRoom && ! car.hasRoom()) suitableExceptFullEncountered = true;
             return allButRoom && car.hasRoom();
@@ -111,7 +126,7 @@ export default class Rider {
             this.carIn.goTo(this.destFloor);
             this.setBoardingPath(suitableCar);
             this.millisAtLastMove = this.p.millis();
-            this.state = this.STATE_BOARDING;
+            this.state = RiderState.Boarding;
         } else if (suitableExceptFullEncountered) this.talker.speakRandom('carFull', undefined, 0.3);
     }
 
@@ -123,7 +138,7 @@ export default class Rider {
     ride() {
         const car = this.carIn;
         this.pos.y = car.y;
-        if (car.state === car.STATE_OPEN && car.y === this.p.yFromFloor(this.destFloor)) {
+        if (car.state === CarState.Open && car.y === this.p.yFromFloor(this.destFloor)) {
             car.removeRider(this);
             this.setExitingPath(car);
             this.millisAtLastMove = this.p.millis();
@@ -131,7 +146,7 @@ export default class Rider {
             this.stats.riders.ridingKg -= this.weight;
             ++this.stats.riders.served;
             this.talker.speakRandom('leaving', undefined, 0.1);
-            this.state = this.STATE_EXITING;
+            this.state = RiderState.Exiting;
         }
     }
 
@@ -156,7 +171,7 @@ export default class Rider {
         return this.p.map(this.p.random(1), 0, 1, -half, half);
     }
 
-    followPath(path, nextState, onComplete, continueWhile) {
+    followPath(path, nextState: RiderState, onComplete, continueWhile?) {
         if (continueWhile && ! continueWhile()) return true;
         const distanceToDestination = this.moveToward(path[0]);
         if (distanceToDestination === 0) {
@@ -181,7 +196,7 @@ export default class Rider {
     }
 
     draw() {
-        if (this.state === this.STATE_EXITED) return;
+        if (this.state === RiderState.Exited) return;
 
         const p = this.p;
         const s = x => x * this.settings.geom.scaleMetersTo3dUnits;

@@ -1,23 +1,21 @@
-export default class Stats {
-    constructor() {
-        this.normalRideCost = 0.25;
-        this.riders = {
-            riding: 0,
-            ridingKg: 0,
-            waiting: 0,
-            served: 0,
-            payments: 0,
-        };
-        this.costs = {
-            perSec: 0.01,
-            perSecPerCar: 0.01,
-            perFloor: 0.1,
-            operating: 0
-        };
-        this.maxRecentRiderPayments = 150;
-        this.recentRiderPayments = [];
-        this.recentTripTimes = [];
-    }
+class Stats {
+    private riders = {
+        riding: 0,
+        ridingKg: 0,
+        waiting: 0,
+        served: 0,
+        payments: 0,
+    };
+    private costs = {
+        perSec: 0.01,
+        perSecPerCar: 0.01,
+        perFloor: 0.1,
+        operating: 0
+    };
+    private normalRideCost = 0.25;
+    private maxRecentRiderPayments = 150;
+    private recentRiderPayments = [];
+    private recentTripTimes = [];
 
     chargeRider(p, tripTime) {
         const penaltyTime = p.constrain(tripTime - 30, 0, 300);

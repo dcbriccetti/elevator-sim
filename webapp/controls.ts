@@ -1,10 +1,15 @@
-export default class Controls {
+class Controls {
+    private readonly p: any;
+    private readonly settings: any;
+    private stats: any;
+    private readonly activeCarsChange: () => void;
+    private paymentsChart: any;
+
     constructor(p, settings, stats) {
         this.p = p;
         this.settings = settings;
         this.stats = stats;
         this.activeCarsChange = () => {};
-        this.volumeChange = v => {};
     }
 
     createKnobs(passengerLoadTypes) {
@@ -30,7 +35,6 @@ export default class Controls {
             }
             settings.volume = volume.value();
             p.dingSound.setVolume(volume.value() / 100);  // It’s much louder than the motors
-            this.volumeChange(settings.volume / 10);
         });
 
         const projection = p.createSelect();

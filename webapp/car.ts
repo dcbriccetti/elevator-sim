@@ -1,13 +1,39 @@
-import MotorSound from './sound.js';
+enum CarState {Idle, Moving, Opening, Open, Closing}
 
-export default class Car {
-    constructor(p, settings, stats, carNumber, talker, voiceName) {
+class Car {
+    private readonly p: any;
+    private settings: any;
+    private stats: any;
+    private readonly carNumber: number;
+    private readonly doorDims: any;
+    private readonly carHorizontalSpacing: number;
+    private readonly carLeftMargin: number;
+    private goingUp: boolean;
+    private doorOpenFraction: number;
+    private destFloors: any[];
+    private riders: any[];
+    private readonly pan: number;
+    private sound: MotorSound;
+    private readonly active: boolean;
+    private state: CarState;
+    private openSince: number;
+    private lastMoveTime: number;
+    private speed: number;
+    private maxMaxSpeed: number;
+    private maxSpeed: number;
+    private accel: number;
+    private startY: number;
+    private endY: number;
+    private absTrip: number;
+    private accelDistance: number;
+    private doorOpStarted: number;
+    private y: number;
+
+    constructor(p, settings, stats, carNumber) {
         this.p = p;
         this.settings = settings;
         this.stats = stats;
         this.carNumber = carNumber;
-        this.talker = talker;
-        this.voiceName = voiceName;
 
         const gc = settings.geom.car;
         this.doorDims = p.createVector(gc.x / 4, gc.y, 5);
@@ -23,17 +49,8 @@ export default class Car {
         this.riders = [];
         this.pan = settings.numCars === 1 ? 0 : p.map(carNumber, 1, settings.numCars, -0.8, 0.8);
         this.sound = new MotorSound(this.pan);
-        this.createStates();
         this.active = false;
-        this.state = this.STATE_IDLE;
-    }
-
-    createStates() {
-        this.STATE_IDLE = 1;
-        this.STATE_MOVING = 2;
-        this.STATE_OPENING = 3;
-        this.STATE_OPEN = 4;
-        this.STATE_CLOSING = 5;
+        this.state = CarState.Idle;
     }
 
     draw() {
@@ -140,31 +157,31 @@ export default class Car {
     update() {
         const p = this.p;
         switch (this.state) {
-            case this.STATE_IDLE:
+            case CarState.Idle:
                 this.idle(p);
                 break;
-            case this.STATE_MOVING:
+            case CarState.Moving:
                 this.move(p);
                 break;
-            case this.STATE_OPENING:
+            case CarState.Opening:
                 this.doorOpenFraction = p.constrain((this.nowSecs() - this.doorOpStarted) / this.settings.doorMovementSecs, 0, 1);
                 if (this.doorOpenFraction === 1) {
-                    this.state = this.STATE_OPEN;
+                    this.state = CarState.Open;
                     this.openSince = p.millis();
                 }
                 break;
-            case this.STATE_OPEN:
+            case CarState.Open:
                 const timeToClose = this.openSince + this.settings.doorOpenMs;
                 const timeToWait = timeToClose - p.millis();
                 if (timeToWait <= 0) {
-                    this.state = this.STATE_CLOSING;
+                    this.state = CarState.Closing;
                     this.doorOpStarted = this.nowSecs();
                 }
                 break;
-            case this.STATE_CLOSING:
+            case CarState.Closing:
                 this.doorOpenFraction = 1 - p.constrain((this.nowSecs() - this.doorOpStarted) / this.settings.doorMovementSecs, 0, 1);
                 if (this.doorOpenFraction === 0) {
-                    this.state = this.STATE_IDLE;
+                    this.state = CarState.Idle;
                 }
                 break;
         }
@@ -184,7 +201,7 @@ export default class Car {
                 nextDest = this.destFloors[0];
             }
             this.stats.addMovementCosts(Math.abs(p.floorFromY(this.y) - nextDest), this.settings.elevSpeed);
-            this.state = this.STATE_MOVING;
+            this.state = CarState.Moving;
             this.sound.osc.amp(p.map(this.settings.volume, 0, 10, 0, 0.6), 0.02);
             console.log(`Car ${this.carNumber} moving to ${nextDest} of ${this.destFloors}`);
             this.lastMoveTime = p.millis() / 1000;
@@ -222,7 +239,7 @@ export default class Car {
             this.y = this.endY;
             this.sound.osc.amp(0, 0.02);
             this.doorOpStarted = this.nowSecs();
-            this.state = this.STATE_OPENING;
+            this.state = CarState.Opening;
             this.removeCurrentFloorFromDest();
             if (this.y === p.yFromFloor(1)) this.goingUp = true;
             if (this.y === p.yFromFloor(this.settings.numFloors)) this.goingUp = false;
@@ -241,15 +258,15 @@ export default class Car {
         this.riders = this.riders.filter(r => r !== rider);
     }
 
-    hasRoom() {
+    hasRoom(): boolean {
         return this.riders.length < this.settings.maxRidersPerCar;
     }
 
-    decelerating() {
+    decelerating(): boolean {
         return Math.abs(this.y - this.endY) < this.accelDistance && this.speed > 0;
     }
 
-    accelerating() {
+    accelerating(): boolean {
         return Math.abs(this.y - this.startY) < this.accelDistance && this.speed < this.maxSpeed;
     }
 

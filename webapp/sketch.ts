@@ -1,9 +1,4 @@
-import Controls from './controls.js'
-import Building from './building.js'
-import Dispatcher from './dispatcher.js'
-import Car from './car.js'
-import Stats from './stats.js'
-import Talker from './talker.js'
+declare const p5;
 
 new p5(p => {
     const passengerLoadTypes =
@@ -25,6 +20,7 @@ new p5(p => {
                 storyHeight: car.y * 1.7,
                 floorDepthGround: floorDepthOthers * 2,
                 floorDepthOthers: floorDepthOthers,
+                canvas: undefined
             },
             controlMode: 0, // Auto
             elevSpeed: 5,
@@ -33,6 +29,8 @@ new p5(p => {
             passengerLoadNumManualLevels: passengerLoadTypes.length - 1, // The first is not manual
             volume: 0,
             speakersType: 0,
+            numFloors: undefined,
+            projectionType: undefined
         };
     }
 
@@ -60,10 +58,9 @@ new p5(p => {
         settings.numFloors = Math.floor(p.height / settings.geom.storyHeight);
         stats = new Stats();
         controls = new Controls(p, settings, stats);
-        talker = {speakRandom: (a, b, c) => {}}; // Temporary dummy talker for Safari
-        talker = new Talker(settings, (voiceNames, englishVoiceNames) => {
-            cars = Array.from(Array(settings.numCars).keys(), n => new Car(p, settings, stats, n + 1,
-                talker, englishVoiceNames[n % englishVoiceNames.length]));
+        talker = new Talker(settings);
+        talker.whenLoaded(() => {
+            cars = Array.from(Array(settings.numCars).keys(), n => new Car(p, settings, stats, n + 1));
             building = new Building(settings, cars);
             dispatcher = new Dispatcher(p, settings, cars, stats, talker);
             controls.createKnobs(passengerLoadTypes);
@@ -125,7 +122,7 @@ new p5(p => {
         const s = stats.riders;
         const l = s => s.toLocaleString();
         const now = p.millis() / 1000;
-        const waitingRiders = dispatcher.riders.filter(r => r.state === r.STATE_WAITING);
+        const waitingRiders = dispatcher.riders.filter(r => r.state === RiderState.Waiting);
         const waitSecs = waitingRiders.reduce((accum, rider) => (now - rider.arrivalTime) + accum, 0);
         const wait = s.waiting ? ` (${l(Math.round(waitSecs))} secs)` : '';
         const profit = s.payments - stats.costs.operating;
